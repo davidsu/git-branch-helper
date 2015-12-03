@@ -1,30 +1,14 @@
 {
   "name": "npmgitbranch",
-  "version": "1.0.0",
-  "description": "utilities to copy changes from branch into master without merging",
-
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sudavid4/npmgitbranch.git"
-  },
-  "author": "David Susskind <susskinddavid@gmail.com> (https://github.com/sudavid4)",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/sudavid4/npmgitbranch/issues"
-  },
-  "homepage": "https://github.com/sudavid4/npmgitbranch#readme",
-
+  "version": "0.0.1",
+  "description": "gbh stands for git branch help. utilities to copy changes from branch into master without merging",
   "dependencies": {
+    "grunt": "^0.4.5",
+    "lodash-node": "^3.10.1",
     "simple-git": "^1.16.0"
   },
-
-
   "preferGlobal": true,
   "bin": {
-    "gitbranch": "index.js"
+    "gbh": "src/index.js"
   }
-
 }
