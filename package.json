@@ -1,5 +1,5 @@
 {
-  "name": "npmgitbranch",
+  "name": "git-branch-helper",
   "version": "0.0.1",
   "description": "gbh stands for git branch help. utilities to copy changes from branch into master without merging",
   "dependencies": {

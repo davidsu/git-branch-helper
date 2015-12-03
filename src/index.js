@@ -10,7 +10,7 @@ var exec = require('child_process').exec;
 var log = console.log;
 
 function toMaster() {
-
+//a
     diff(true, (files)=>{
         _.forEach(files.add, (file)=>grunt.file.copy(file, 'tmp/'+file));
         exec('git checkout master', (err, stdout, stderr)=>{
@@ -22,10 +22,11 @@ function toMaster() {
             _.forEach(files.add, (file)=>grunt.file.copy('tmp/' + file, file));
             exec('rm -rf tmp');
             _.forEach(files.del, (file)=>exec('rm '+file));
+            //find empty dirs and erase them!!!(in those that files where erased only)
         });
 
     });
-
+//b
 }
 function status() {
 
