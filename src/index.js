@@ -13,11 +13,12 @@ function toMaster() {
 
     diff(true, (files)=>{
         _.forEach(files.add, (file)=>grunt.file.copy(file, 'tmp/'+file));
-        simpleGit.checkout('master', (err, a)=>{
+        exec('git checkout master', (err, stdout, stderr)=>{
             if(err){
+                log(stdout, stderr);
                 throw new Error(err);
             }
-            console.log(a);
+            log(stdout, stderr);
             _.forEach(files.add, (file)=>grunt.file.copy('tmp/' + file, file));
             exec('rm -rf tmp');
             _.forEach(files.del, (file)=>exec('rm '+file));
@@ -28,7 +29,7 @@ function toMaster() {
 }
 function status() {
 
-    function puts(error, stdout, stderr) {
+    exec("git status", (error, stdout, stderr)=> {
         var resArr = stdout.match(/modified:[^\n]*/g);
         var res = {
             modified: _.map(resArr, (item)=> {
@@ -36,9 +37,7 @@ function status() {
             })
         };
         console.log(res);
-    }
-
-    exec("git status", puts);
+    });
 }
 
 function diff(dontLog, callback) {
@@ -55,12 +54,12 @@ function diff(dontLog, callback) {
 
         _.forEach(stdout.split('\n'), (input)=> {
             if (!res[input[0]]) {
-                log(input[0]);
+                input[0] && log(input[0]);
             } else {
                 res[input[0]].push(input.substring(2).trim());
             }
         });
-        !dontLog && console.log(res);
+        !dontLog && log(res);
         res.add = res.M.concat(res.C).concat(res.A);
         res.del = res.D;
         callback && callback(res);
