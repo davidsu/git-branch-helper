@@ -9,24 +9,22 @@ var userArgs = process.argv.slice(2);
 var exec = require('child_process').exec;
 var log = console.log;
 
-function toMaster() {
-//a
-    diff(true, (files)=>{
-        _.forEach(files.add, (file)=>grunt.file.copy(file, 'tmp/'+file));
-        exec('git checkout master', (err, stdout, stderr)=>{
-            if(err){
-                log(stdout, stderr);
-                throw new Error(err);
-            }
-            log(stdout, stderr);
-            _.forEach(files.add, (file)=>grunt.file.copy('tmp/' + file, file));
-            exec('rm -rf tmp');
-            _.forEach(files.del, (file)=>exec('rm '+file));
-            //find empty dirs and erase them!!!(in those that files where erased only)
-        });
 
+function toMaster() {
+    merge(true, ()=> {
+        diff(true, (files)=> {
+            _.forEach(files.add, (file)=>grunt.file.copy(file, 'tmp/' + file));
+            exec('git checkout master', (err, stdout, stderr)=> {
+                if (err) {
+                    throw new Error(err);
+                }
+                _.forEach(files.add, (file)=>grunt.file.copy('tmp/' + file, file));
+                exec('rm -rf tmp');
+                _.forEach(files.del, (file)=>exec('rm ' + file));
+            });
+
+        })
     });
-//b
 }
 function status() {
 
@@ -41,6 +39,17 @@ function status() {
     });
 }
 
+function merge(dontLog, callback) {
+    exec('git merge master', (e, i, o)=> {
+        !dontLog && console.log('error', e, '\n\n\nin', i, '\n\n\nout', o);
+        if (e && i.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
+            exec('git reset --hard');
+        } else if (callback) {
+            callback();
+        }
+    });
+
+}
 function diff(dontLog, callback) {
     exec("git diff master --name-status", (error, stdout, stderr)=> {
         if (error) {
@@ -60,21 +69,18 @@ function diff(dontLog, callback) {
                 res[input[0]].push(input.substring(2).trim());
             }
         });
-        !dontLog && log(res);
+        !dontLog && console.log(res);
         res.add = res.M.concat(res.C).concat(res.A);
         res.del = res.D;
         callback && callback(res);
-
-
     });
-
-
 }
 var cmds = {
     status: status,
     diff: diff,
     tomaster: toMaster,
-    toMaster: toMaster
+    toMaster: toMaster,
+    merge: merge
 };
 
 userArgs[0] && cmds[userArgs[0]]();
