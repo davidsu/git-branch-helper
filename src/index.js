@@ -2,12 +2,17 @@
 
 //var simpleGit = require('simple-git')(process.cwd);
 
+var chalk = require('chalk');
 var _ = require('lodash-node');
 var grunt = require('grunt');
 
+var log = console.log;
+var errLog = (err)=>log(chalk.red(err));
+var greenLog = (msg)=>log(chalk.green(msg));
+
 var userArgs = process.argv.slice(2);
 var exec = require('child_process').exec;
-var log = console.log;
+
 
 function toMaster() {
     var transferFilesToMaster = (files)=> {
@@ -46,10 +51,12 @@ function status() {
     });
 }
 
+
+
 function merge(dontLog, callback) {
-    exec('git merge master', (e, i, o)=> {
-        !dontLog && console.log('error', e, '\n\n\nin', i, '\n\n\nout', o);
-        if (e && i.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
+    exec('git merge master', (err, stdin, stderr)=> {
+        !dontLog && console.log('error', err, '\n\n\nin', stdin, '\n\n\nout', stderr);
+        if (err && stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
             exec('git reset --hard');
         } else if (callback) {
             callback();
@@ -84,12 +91,52 @@ function diff(dontLog, callback) {
     });
 }
 
+
+function checkoutBranch(){
+
+}
+
+function currBranch(callback){
+    exec('git branch', (err,stdin,oer)=>{
+        if(err){
+            errLog(err);
+            errLog(oer);
+            return;
+        }
+        var cb;
+        _.forEach(stdin.split('\n'), (branch)=>{
+            if(branch[0]==='*'){
+                cb = branch.substring(1).trim();
+                greenLog(branch);
+            } else{
+                log(branch);
+            }
+        });
+        callback && callback(cb);
+    });
+}
+
+var tmp = {
+    currBranch: currBranch,
+    currbranch: currBranch,
+    simplecommit: ()=>exec('git add . && git commit -m"."')
+};
+
+var shortCuts = {
+    cob: checkoutBranch,
+    checkoutbranch : checkoutBranch,
+    tomaster: toMaster
+};
+
 var cmds = {
     status: status,
     diff: diff,
-    tomaster: toMaster,
     toMaster: toMaster,
+    checkoutBranch: checkoutBranch,
     merge: merge
 };
 
-userArgs[0] && cmds[userArgs[0]]();
+_.assign(cmds, shortCuts, tmp);
+_.forEach(userArgs, (arg)=>{
+    cmds[arg]();
+});
