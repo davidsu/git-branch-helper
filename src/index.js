@@ -4,41 +4,44 @@
 
 var chalk = require('chalk');
 var _ = require('lodash-node');
-var grunt = require('grunt');
+var file = require('./utils/file');
 
 var log = console.log;
 var errLog = (err)=>log(chalk.red(err));
 var greenLog = (msg)=>log(chalk.green(msg));
 
-var userArgs = process.argv.slice(2);
+
 var exec = require('child_process').exec;
 
-
-function toMaster() {
+var prompt = require('./utils/prompt.js');
+function toMaster(cb) {
     var transferFilesToMaster = (files)=> {
+        console.log('checking out');
         exec('git checkout master', (err, stdout, stderr)=> {
             if (err) {
                 throw new Error(err);
             }
-            _.forEach(files.add, (file)=>grunt.file.copy('tmp/' + file, file));
+            _.forEach(files.add, (_file)=>file.copy('tmp/' + _file, _file));
             exec('rm -rf tmp');
             _.forEach(files.del, (file)=>exec('rm ' + file));
         });
     };
     var prepareFiles = (files)=> {
-        _.forEach(files.add, (file)=>grunt.file.copy(file, 'tmp/' + file));
+        _.forEach(files.add, (_file)=>file.copy(_file, 'tmp/' + _file));
     };
 
 
-    merge(true, ()=> {
-        diff(true, (files)=> {
+    merge(()=> {
+        diff((files)=> {
+            console.log('preparing');
             prepareFiles(files);
             transferFilesToMaster(files);
-        })
-    });
+            cb();
+        }, true)
+    }, true);
 }
 
-function status() {
+function status(callback) {
 
     exec("git status", (error, stdout, stderr)=> {
         var resArr = stdout.match(/modified:[^\n]*/g);
@@ -48,16 +51,19 @@ function status() {
             })
         };
         console.log(res);
+        callback();
     });
 }
 
 
 
-function merge(dontLog, callback) {
+function merge(callback, dontLog) {
+    console.log('merging');
     exec('git merge master', (err, stdin, stderr)=> {
         !dontLog && console.log('error', err, '\n\n\nin', stdin, '\n\n\nout', stderr);
         if (err && stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
             exec('git reset --hard');
+            throw new Error('unable to merge automatic');
         } else if (callback) {
             callback();
         }
@@ -65,7 +71,8 @@ function merge(dontLog, callback) {
 
 }
 
-function diff(dontLog, callback) {
+function diff(callback, dontLog) {
+    log('diffing');
     exec("git diff master --name-status", (error, stdout, stderr)=> {
         if (error) {
             throw new Error(error);
@@ -116,10 +123,34 @@ function currBranch(callback){
     });
 }
 
+function commit(cb, msg){
+    var gitcommit = (cmsg)=>{
+        exec('git add . && git commit -m"'+cmsg+'"', (err, i, oerr)=>{
+            if(err){
+                errLog(err);
+                errLog(oerr);
+            }
+            cb();
+        })
+    };
+
+    if(!msg){
+        prompt('commit message:\n', (cmsg)=>{
+            gitcommit(cmsg);
+        })
+    }else{
+        gitcommit(msg);
+    }
+
+}
+
 var tmp = {
     currBranch: currBranch,
     currbranch: currBranch,
-    simplecommit: ()=>exec('git add . && git commit -m"."')
+    simplecommit: (cb)=>{
+        exec('git add . && git commit -m"."');
+        cb();
+    }
 };
 
 var shortCuts = {
@@ -137,6 +168,17 @@ var cmds = {
 };
 
 _.assign(cmds, shortCuts, tmp);
-_.forEach(userArgs, (arg)=>{
-    cmds[arg]();
-});
+function performCmdsInOrder(){
+    var userArgs = process.argv.slice(2);
+    var flags = _.filter(userArgs, (arg)=>_.startsWith(arg, '--'));
+    var cmdNames = _.filter(userArgs, (arg)=>!_.startsWith(arg, '--'));
+    var execArr = [];
+    for(var i = cmdNames.length-1; i>=0; i--){
+        var cmd = cmds[cmdNames[i+1]] || prompt.end;
+        execArr.push(cmds[cmdNames[i]].bind(null, cmd));
+    }
+    execArr[execArr.length-1]();
+}
+performCmdsInOrder();
+
+
