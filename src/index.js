@@ -8,7 +8,7 @@ var gitUtils = require('./utils/gitUtils');
 var log = console.log;
 var logErr = (err)=>log(chalk.red(err));
 var logUnderline = (msg)=>log(chalk.underline(msg));
-var shouldLog;
+var shouldLog, skipMerge;
 
 
 var exec = require('child_process').exec;
@@ -35,16 +35,15 @@ function toMaster() {
         _.forEach(files.add, (_file)=>fsUtils.copy(_file, 'tmp/' + _file));
     };
 
-
-    return diff()
-        //.then(diff, defaultReject)
-        .then((files)=> {
-            prepareFiles(files);
-            transferFilesToMaster(files);
-        }, defaultReject);
+    var promis = (skipMerge && diff()) || merge().then(diff, defaultReject);
+    return promis.then((files)=> {
+        prepareFiles(files);
+        transferFilesToMaster(files);
+    }, defaultReject);
 }
 
 function status() {
+    logUnderline('status');
     return new Promise((resolve, reject)=> {
         exec("git status --porcelain", (error, stdout, stderr)=> {
             error && reject(chalk.red(error, stderr));
@@ -53,11 +52,16 @@ function status() {
     })
         .then(gitUtils.parseStatus)
         .then((statusObj)=> {
+            var res = _.chain([
+                chalk.yellow(statusObj.not_added.join('\n')),
+                chalk.red(statusObj.deleted.join('\n')),
+                chalk.cyan(statusObj.modified.join('\n')),
+                chalk.green(statusObj.created.join('\n'))
+            ])
+                .filter((str)=>str.length !== 0)
+                .value();
             log(chalk.yellow('NOT_ADDED ') + chalk.red('DELETED ') + chalk.cyan('MODIFIED ') + chalk.green('CREATED\n'));
-            log(chalk.yellow(statusObj.not_added.join('\n')));
-            log(chalk.red(statusObj.deleted.join('\n')));
-            log(chalk.cyan(statusObj.modified.join('\n')));
-            log(chalk.green(statusObj.created.join('\n')));
+            _.forEach(res, (str)=>log(str));
 
         });
 
@@ -71,7 +75,7 @@ function merge() {
             if (err && stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
                 exec('git reset --hard');
                 reject(err, stderr);
-            }else if(err){
+            } else if (err) {
                 reject(err, stderr);
             }
             resolve();
@@ -166,9 +170,9 @@ function currBranch() {
     })
 }
 
-function simpleCommit(){
-    return new Promise((resolve, reject)=>{
-        exec('git add . && git commit -m"."', (err, stdout, stderr)=>{
+function simpleCommit() {
+    return new Promise((resolve, reject)=> {
+        exec('git add . && git commit -m"."', (err, stdout, stderr)=> {
             err && reject(err, stderr);
             resolve(stdout);
         });
@@ -194,22 +198,28 @@ var cmds = {
     checkoutBranch: checkoutBranch,
     merge: merge,
     simpleCommit: simpleCommit,
-    commit:commit
+    commit: commit
 };
 
 _.assign(cmds, shortCuts, tmp);
 
 function setFlags(flags) {
+    log(flags);
     shouldLog = _.contains(flags, '--log');
+    skipMerge = _.contains(flags, '--skipMerge')
 }
 
-function defaultReject(err, stderr){
+function defaultReject(err, stderr) {
     err && logErr(err);
     stderr && logErr(stderr);
     process.exit(1);
 }
 function performCmdsInOrder(userArgs) {
-    setFlags(_.filter(userArgs, (arg)=>_.startsWith(arg, '--')))
+    setFlags(_.chain(userArgs)
+            .filter((arg)=>_.startsWith(arg, '--'))
+            .map((arg)=>arg.toLowerCase())
+            .value()
+    );
     var cmdNames = _.filter(userArgs, (arg)=>!_.startsWith(arg, '--'));
     var cmd, promise = cmds[cmdNames.shift()]();
     while ((cmd = cmdNames.shift())) {
@@ -217,6 +227,8 @@ function performCmdsInOrder(userArgs) {
     }
     promise.then(prompt.end, defaultReject);
 }
+//console.log(process.argv);
+//process.exit(0);
 performCmdsInOrder(process.argv.slice(2));
 
 
