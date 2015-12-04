@@ -3,18 +3,18 @@
  */
 process.stdin.setEncoding('utf8');
 var util = require('util');
+var resolvePromise;
 
-var callback = function (text) {
-    console.log('received data:', util.inspect(text));
-};
 process.stdin.on('data', (text)=>{
     console.log(text);
-    callback(text);
+    resolvePromise(text);
 });
 
-module.exports.question = (question, cb)=>{
+module.exports.question = (question)=>{
     console.log(question);
-    callback = cb;
+    return new Promise((resolve)=>{
+        resolvePromise = resolve;
+    });
 };
 
 module.exports.end = ()=>{
