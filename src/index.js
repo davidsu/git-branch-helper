@@ -9,23 +9,30 @@ var userArgs = process.argv.slice(2);
 var exec = require('child_process').exec;
 var log = console.log;
 
-
 function toMaster() {
+    var transferFilesToMaster = (files)=> {
+        exec('git checkout master', (err, stdout, stderr)=> {
+            if (err) {
+                throw new Error(err);
+            }
+            _.forEach(files.add, (file)=>grunt.file.copy('tmp/' + file, file));
+            exec('rm -rf tmp');
+            _.forEach(files.del, (file)=>exec('rm ' + file));
+        });
+    };
+    var prepareFiles = (files)=> {
+        _.forEach(files.add, (file)=>grunt.file.copy(file, 'tmp/' + file));
+    };
+
+
     merge(true, ()=> {
         diff(true, (files)=> {
-            _.forEach(files.add, (file)=>grunt.file.copy(file, 'tmp/' + file));
-            exec('git checkout master', (err, stdout, stderr)=> {
-                if (err) {
-                    throw new Error(err);
-                }
-                _.forEach(files.add, (file)=>grunt.file.copy('tmp/' + file, file));
-                exec('rm -rf tmp');
-                _.forEach(files.del, (file)=>exec('rm ' + file));
-            });
-
+            prepareFiles(files);
+            transferFilesToMaster(files);
         })
     });
 }
+
 function status() {
 
     exec("git status", (error, stdout, stderr)=> {
@@ -50,6 +57,7 @@ function merge(dontLog, callback) {
     });
 
 }
+
 function diff(dontLog, callback) {
     exec("git diff master --name-status", (error, stdout, stderr)=> {
         if (error) {
@@ -75,6 +83,7 @@ function diff(dontLog, callback) {
         callback && callback(res);
     });
 }
+
 var cmds = {
     status: status,
     diff: diff,
