@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var simpleGit = require('simple-git')(process.cwd);
+//var simpleGit = require('simple-git')(process.cwd);
 
 var _ = require('lodash-node');
 var grunt = require('grunt');
