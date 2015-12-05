@@ -97,23 +97,12 @@ function checkout(branchName, isRecursing) {
 function merge() {
     log(chalk.underline('merging'));
     return _run('git merge master')
-        .then((stdin)=>{
-
-    }, (err, stderr)=>{
-            log(stderr);
-            log(this);
-        });
-    return new Promise((resolve, reject)=> {
-        exec('git merge master', (err, stdin, stderr)=> {
-            if (err && stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
+        .then(()=>{}, (err, stderr, stdin)=>{
+            if(stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1){
+                log(chalk.underline('merge rejected, reseting'));
                 exec('git reset --hard');
-                reject(err, stderr);
-            } else if (err) {
-                reject(err, stderr);
             }
-            resolve();
         });
-    });
 }
 
 module.exports.simpleCommit = ()=>commit('.');
