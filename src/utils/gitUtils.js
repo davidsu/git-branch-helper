@@ -102,14 +102,13 @@ function merge() {
     log(chalk.underline('merging'));
     return _run('git merge master')
         .then(()=>{}, (rejectObj)=>{
-            //logErr(rejerr);
-            //logErr(stderr);
-            //log(chalk.yellow(stdin));
-            //process.exit(1);
             if(rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1){
                 log(chalk.underline('merge rejected, reseting'));
                 exec('git reset --hard');
             }
+            rejectObj.err && log(chalk.red(rejectObj.err));
+            rejectObj.stderr && logErr(rejectObj.stderr);
+            process.exit(1);
 
         });
 }
