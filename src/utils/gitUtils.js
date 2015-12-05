@@ -104,7 +104,7 @@ function checkout(branchName) {
         return currBranch(true)
             .then(log(chalk.cyan.underline('no branch selected')))
             .then(()=>prompt.question(chalk.cyan.underline('choose branch to checkout:')))
-            .then((bname)=>checkoutBranch(bname));
+            .then((bname)=>checkout(bname));
     }
     return new Promise((resolve, reject)=> {
         exec('git checkout ' + branchName, (err, stdout, stderr)=> {
