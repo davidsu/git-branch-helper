@@ -2,6 +2,13 @@
  * Created by davidsu on 04/12/2015.
  */
 var _ = require('lodash-node');
+var chalk = require('chalk');
+var prompt = require('./prompt');
+var flags = require('./flags');
+var exec = require('child_process').exec;
+var log = console.log;
+var logErr = (err)=>log(chalk.red(err));
+var logUnderline = (msg)=>log(chalk.underline(msg));
 module.exports.parseStatus = (status) =>{
     var line;
     var lines = status.trim().split('\n');
@@ -40,3 +47,74 @@ module.exports.parseStatus = (status) =>{
         created: created
     };
 };
+
+
+function commit(msg) {
+    logUnderline('commit');
+    var gitcommit = (cmsg)=> {
+        return new Promise((resolve, reject)=> {
+            logUnderline('gitcommit');
+            exec('git add . && git commit -m"' + cmsg + '"', (err, i, oerr)=> {
+                if (err) {
+                    logErr(err);
+                    logErr(oerr);
+                    reject();
+                }
+                resolve();
+            });
+        });
+    };
+
+
+    if (!msg) {
+        return prompt.question('commit message:\n')
+            .then((cmsg)=> {
+                gitcommit(cmsg);
+            })
+    } else {
+        gitcommit(msg);
+    }
+}
+
+function currBranch(showAll) {
+    return new Promise((resolve, reject)=> {
+        exec('git branch', (err, stdin, oer)=> {
+            if (err) {
+                logErr(err);
+                logErr(oer);
+                reject();
+            }
+            var currBranchName;
+            _.forEach(stdin.split('\n'), (branch)=> {
+                if (branch[0] === '*') {
+                    currBranchName = branch.substring(1).trim();
+                    log(chalk.green(currBranchName));
+                } else {
+                    (flags.shouldLog || showAll) && log(branch.trim());
+                }
+            });
+            (!currBranchName && reject('current branch unkown')) || resolve(currBranchName);
+        });
+    })
+}
+
+function checkout(branchName) {
+
+    if (!branchName) {
+        return currBranch(true)
+            .then(log(chalk.cyan.underline('no branch selected')))
+            .then(()=>prompt.question(chalk.cyan.underline('choose branch to checkout:')))
+            .then((bname)=>checkoutBranch(bname));
+    }
+    return new Promise((resolve, reject)=> {
+        exec('git checkout ' + branchName, (err, stdout, stderr)=> {
+            err && reject(err, stderr);
+            resolve(stdout);
+        })
+    })
+}
+
+module.exports.simpleCommit = ()=>commit('.');
+module.exports.commit = commit;
+module.exports.currBranch = currBranch;
+module.exports.checkout = checkout;
