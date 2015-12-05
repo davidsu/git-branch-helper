@@ -42,7 +42,7 @@ function toMaster() {
         transferFilesToMaster(files);
     }, defaultReject);
 }
-
+//a
 function status() {
     logUnderline('status');
     return new Promise((resolve, reject)=> {
@@ -67,7 +67,7 @@ function status() {
         });
 
 }
-
+//b
 
 function merge() {
     shouldLog && log(chalk.underline('merging'));
