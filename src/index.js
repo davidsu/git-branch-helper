@@ -15,7 +15,7 @@ var exec = require('child_process').exec;
 
 var prompt = require('./utils/prompt.js');
 function toMaster() {
-    shouldLog && logUnderline('tomaster start');
+    logUnderline('tomaster');
     var transferFilesToMaster = (files)=> {
         shouldLog && console.log('checking out');
         return new Promise((resolve, reject)=> {
@@ -171,6 +171,7 @@ function currBranch() {
 }
 
 function simpleCommit() {
+    logUnderline('simpleCommit');
     return new Promise((resolve, reject)=> {
         exec('git add . && git commit -m"."', (err, stdout, stderr)=> {
             err && reject(err, stderr);
