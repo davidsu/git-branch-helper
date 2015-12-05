@@ -171,6 +171,7 @@ function currBranch() {
 }
 
 function simpleCommit() {
+    logUnderline('simpleCommit');
     return new Promise((resolve, reject)=> {
         exec('git add . && git commit -m"."', (err, stdout, stderr)=> {
             err && reject(err, stderr);
