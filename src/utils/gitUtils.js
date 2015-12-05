@@ -13,7 +13,11 @@ var logUnderline = (msg)=>log(chalk.underline(msg));
 function _run(cmd) {
     return new Promise((resolve, reject)=> {
         exec(cmd, (err, stdin, stderr)=> {
-            err && reject(err, stderr, stdin);
+            err && reject({
+                err :err
+                , stderr:stderr
+                , stdin:stdin
+            });
             resolve(stdin);
         })
     })
@@ -97,12 +101,12 @@ function checkout(branchName, isRecursing) {
 function merge() {
     log(chalk.underline('merging'));
     return _run('git merge master')
-        .then(()=>{}, (err, stderr, stdin)=>{
-            logErr(err);
-            logErr(stderr);
-            log(chalk.yellow(stdin));
-            process.exit(1);
-            if(stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1){
+        .then(()=>{}, (rejectObj)=>{
+            //logErr(rejerr);
+            //logErr(stderr);
+            //log(chalk.yellow(stdin));
+            //process.exit(1);
+            if(rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1){
                 log(chalk.underline('merge rejected, reseting'));
                 exec('git reset --hard');
             }
