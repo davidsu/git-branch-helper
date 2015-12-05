@@ -9,6 +9,15 @@ var exec = require('child_process').exec;
 var log = console.log;
 var logErr = (err)=>log(chalk.red(err));
 var logUnderline = (msg)=>log(chalk.underline(msg));
+
+function _run(cmd){
+    return new Promise((resolve, reject)=>{
+        exec(cmd, (err, stdin, stderr)=>{
+            err && reject(err, stderr);
+            resolve(stdin);
+        })
+    })
+}
 module.exports.parseStatus = (status) =>{
     var line;
     var lines = status.trim().split('\n');
@@ -48,32 +57,15 @@ module.exports.parseStatus = (status) =>{
     };
 };
 
-
-function commit(msg) {
-    logUnderline('commit');
-    var gitcommit = (cmsg)=> {
-        return new Promise((resolve, reject)=> {
-            logUnderline('gitcommit');
-            exec('git add . && git commit -m"' + cmsg + '"', (err, i, oerr)=> {
-                if (err) {
-                    logErr(err);
-                    logErr(oerr);
-                    reject();
-                }
-                resolve();
-            });
-        });
-    };
-
-
+function commit(msg, isRecursing) {
+    !isRecursing && logUnderline('commit');
     if (!msg) {
         return prompt.question('commit message:\n')
             .then((cmsg)=> {
-                gitcommit(cmsg);
+                commit(cmsg, true);
             })
-    } else {
-        gitcommit(msg);
     }
+    return _run('git add . && git commit -m"' + msg + '"');
 }
 
 function currBranch(showAll) {
