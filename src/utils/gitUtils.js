@@ -13,7 +13,7 @@ var logUnderline = (msg)=>log(chalk.underline(msg));
 function _run(cmd) {
     return new Promise((resolve, reject)=> {
         exec(cmd, (err, stdin, stderr)=> {
-            err && reject(err, stderr);
+            err && reject(err, stderr, stdin);
             resolve(stdin);
         })
     })
@@ -99,7 +99,10 @@ function merge() {
     return _run('git merge master')
         .then((stdin)=>{
 
-    }, (err, stderr)=>{log(stderr)});
+    }, (err, stderr)=>{
+            log(stderr);
+            log(this);
+        });
     return new Promise((resolve, reject)=> {
         exec('git merge master', (err, stdin, stderr)=> {
             if (err && stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
