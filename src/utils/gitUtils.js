@@ -102,6 +102,9 @@ function merge() {
                 log(chalk.underline('merge rejected, reseting'));
                 exec('git reset --hard');
             }
+            err && logErr(err);
+            stderr && logErr(stderr);
+            process.exit(1);
         });
 }
 
