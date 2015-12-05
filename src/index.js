@@ -69,23 +69,6 @@ function status() {
 }
 
 
-function merge() {
-    shouldLog && log(chalk.underline('merging'));
-    return new Promise((resolve, reject)=> {
-        exec('git merge master', (err, stdin, stderr)=> {
-            if (err && stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
-                exec('git reset --hard');
-                reject(err, stderr);
-            } else if (err) {
-                reject(err, stderr);
-            }
-            resolve();
-        });
-    });
-
-
-}
-
 function diff() {
 
     shouldLog && log('diffing');
@@ -136,7 +119,7 @@ var cmds = {
     diff: diff,
     toMaster: toMaster,
     checkout: gitUtils.checkout,
-    merge: merge,
+    merge: gitUtils.merge,
     simpleCommit: gitUtils.simpleCommit,
     commit: gitUtils.commit
 };

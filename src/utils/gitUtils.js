@@ -10,15 +10,15 @@ var log = console.log;
 var logErr = (err)=>log(chalk.red(err));
 var logUnderline = (msg)=>log(chalk.underline(msg));
 
-function _run(cmd){
-    return new Promise((resolve, reject)=>{
-        exec(cmd, (err, stdin, stderr)=>{
+function _run(cmd) {
+    return new Promise((resolve, reject)=> {
+        exec(cmd, (err, stdin, stderr)=> {
             err && reject(err, stderr);
             resolve(stdin);
         })
     })
 }
-module.exports.parseStatus = (status) =>{
+function parseStatus(status) {
     var line;
     var lines = status.trim().split('\n');
 
@@ -69,44 +69,53 @@ function commit(msg, isRecursing) {
 }
 
 function currBranch(showAll) {
-    return new Promise((resolve, reject)=> {
-        exec('git branch', (err, stdin, oer)=> {
-            if (err) {
-                logErr(err);
-                logErr(oer);
-                reject();
-            }
-            var currBranchName;
+    return _run('git branch')
+        .then((stdin)=> {
+            var currBranchName = null;
             _.forEach(stdin.split('\n'), (branch)=> {
                 if (branch[0] === '*') {
                     currBranchName = branch.substring(1).trim();
-                    log(chalk.green(currBranchName));
-                } else {
-                    (flags.shouldLog || showAll) && log(branch.trim());
                 }
+                (flags.shouldLog || showAll) && log(branch.trim());
+
             });
-            (!currBranchName && reject('current branch unkown')) || resolve(currBranchName);
+            return currBranchName;
         });
-    })
 }
 
-function checkout(branchName) {
-
+function checkout(branchName, isRecursing) {
+    !isRecursing && log(chalk.underline('checkout ' + branchName));
     if (!branchName) {
         return currBranch(true)
             .then(log(chalk.cyan.underline('no branch selected')))
             .then(()=>prompt.question(chalk.cyan.underline('choose branch to checkout:')))
             .then((bname)=>checkout(bname));
     }
+    return _run('git checkout ' + branchName);
+}
+
+function merge() {
+    log(chalk.underline('merging'));
+    return _run('git merge master')
+        .then((stdin)=>{
+
+    });
     return new Promise((resolve, reject)=> {
-        exec('git checkout ' + branchName, (err, stdout, stderr)=> {
-            err && reject(err, stderr);
-            resolve(stdout);
-        })
-    })
+        exec('git merge master', (err, stdin, stderr)=> {
+            if (err && stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
+                exec('git reset --hard');
+                reject(err, stderr);
+            } else if (err) {
+                reject(err, stderr);
+            }
+            resolve();
+        });
+    });
 }
 
 module.exports.simpleCommit = ()=>commit('.');
 module.exports.commit = commit;
 module.exports.currBranch = currBranch;
 module.exports.checkout = checkout;
+module.exports.merge = merge;
+module.exports.parseStatus = parseStatus;
