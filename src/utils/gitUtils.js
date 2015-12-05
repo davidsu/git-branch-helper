@@ -99,7 +99,7 @@ function merge() {
     return _run('git merge master')
         .then((stdin)=>{
 
-    });
+    }, (err, stderr)=>{log(stderr)});
     return new Promise((resolve, reject)=> {
         exec('git merge master', (err, stdin, stderr)=> {
             if (err && stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
