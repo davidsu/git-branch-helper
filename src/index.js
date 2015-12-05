@@ -4,6 +4,7 @@ var chalk = require('chalk');
 var _ = require('lodash-node');
 var fsUtils = require('./utils/fsUtils');
 var gitUtils = require('./utils/gitUtils');
+var flags = require('./utils/flags');
 
 var log = console.log;
 var logErr = (err)=>log(chalk.red(err));
@@ -116,98 +117,12 @@ function diff() {
 }
 
 
-function checkoutBranch() {
-
-}
 
 
-function commit(msg) {
-    logUnderline('commit');
-    var gitcommit = (cmsg)=> {
-        return new Promise((resolve, reject)=> {
-            logUnderline('gitcommit');
-            exec('git add . && git commit -m"' + cmsg + '"', (err, i, oerr)=> {
-                if (err) {
-                    logErr(err);
-                    logErr(oerr);
-                    reject();
-                }
-                resolve();
-            });
-        });
-    };
 
-
-    if (!msg) {
-        return prompt.question('commit message:\n')
-            .then((cmsg)=> {
-                gitcommit(cmsg);
-            })
-    } else {
-        gitcommit(msg);
-    }
-}
-
-function currBranch() {
-    return new Promise((resolve, reject)=> {
-        exec('git branch', (err, stdin, oer)=> {
-            if (err) {
-                logErr(err);
-                logErr(oer);
-                reject();
-            }
-            var cb;
-            _.forEach(stdin.split('\n'), (branch)=> {
-                if (branch[0] === '*') {
-                    cb = branch.substring(1).trim();
-                    log(chalk.green(branch));
-                } else {
-                    log(branch);
-                }
-            });
-            resolve();
-        });
-    })
-}
-
-function simpleCommit() {
-    logUnderline('simpleCommit');
-    return new Promise((resolve, reject)=> {
-        exec('git add . && git commit -m"."', (err, stdout, stderr)=> {
-            err && reject(err, stderr);
-            resolve(stdout);
-        });
-    });
-}
-
-var tmp = {
-    currBranch: currBranch,
-    currbranch: currBranch,
-};
-
-var shortCuts = {
-    cob: checkoutBranch,
-    checkoutbranch: checkoutBranch,
-    tomaster: toMaster,
-    simplecommit: simpleCommit
-};
-
-var cmds = {
-    status: status,
-    diff: diff,
-    toMaster: toMaster,
-    checkoutBranch: checkoutBranch,
-    merge: merge,
-    simpleCommit: simpleCommit,
-    commit: commit
-};
-
-_.assign(cmds, shortCuts, tmp);
-
-function setFlags(flags) {
-    log(flags);
-    shouldLog = _.contains(flags, '--log');
-    skipMerge = _.contains(flags, '--skipMerge')
+function setFlags(flagsArg) {
+    Log = flags.shouldLog = _.contains(flagsArg, '--log');
+    skipMerge = flags.skipMerge = _.contains(flagsArg, '--skipMerge')
 }
 
 function defaultReject(err, stderr) {
@@ -215,6 +130,30 @@ function defaultReject(err, stderr) {
     stderr && logErr(stderr);
     process.exit(1);
 }
+
+var cmds = {
+    status: status,
+    diff: diff,
+    toMaster: toMaster,
+    checkout: gitUtils.checkout,
+    merge: merge,
+    simpleCommit: gitUtils.simpleCommit,
+    commit: gitUtils.commit
+};
+
+var tmp = {
+    currBranch: gitUtils.currBranch,
+    currbranch: gitUtils.currBranch
+};
+
+var shortCuts = {
+    cob: cmds.checkoutBranch,
+    checkoutbranch: cmds.checkoutBranch,
+    tomaster: cmds.toMaster,
+    simplecommit: cmds.simpleCommit
+};
+_.assign(cmds, shortCuts, tmp);
+
 function performCmdsInOrder(userArgs) {
     setFlags(_.chain(userArgs)
             .filter((arg)=>_.startsWith(arg, '--'))

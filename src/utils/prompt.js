@@ -11,7 +11,7 @@ process.stdin.on('data', (text)=>{
 });
 
 module.exports.question = (question)=>{
-    console.log(question);
+    process.stdout.write(question+' ');
     return new Promise((resolve)=>{
         resolvePromise = resolve;
     });
