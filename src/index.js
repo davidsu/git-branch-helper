@@ -16,10 +16,12 @@ var prompt = require('./utils/prompt.js');
 function toMaster() {
     log.task('tomaster');
     var transferFilesToMaster = (files)=> {
-        flags.shouldLog && console.log('checking out');
+        log.task('checking out');
+        log.info(files.modified.concat(files.created));
         return gitUtils.run('git checkout master')
             .then(()=> {
                 log.task('copying into master');
+                log.info(files.modified.concat(files.created));
                 _.forEach(files.modified.concat(files.created), (file)=>{
                     log('tmp/' + file, file);
                     fsUtils.copy('tmp/' + file, file)
