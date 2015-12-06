@@ -85,7 +85,6 @@ function commit(msg, isRecursing) {
     }
     return run('git add . && git commit -m"' + msg + '"');
 }
-
 function currBranch(showAll) {
     return run('git branch')
         .then((stdin)=> {
@@ -103,7 +102,6 @@ function currBranch(showAll) {
             return currBranchName;
         });
 }
-
 function checkout(branchName, isRecursing) {
     !isRecursing && log(chalk.underline('checkout ' + branchName));
     if (!branchName) {
