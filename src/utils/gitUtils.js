@@ -24,7 +24,8 @@ function run(cmd) {
 }
 function merge(branch) {
     log.task('merging');
-    return run('git merge ' + (branch || params.branch || 'master'))
+    branch = branch || params.branch || 'master'
+    return run('git merge ' + branch)
         .catch((rejectObj)=> {
             if (!flags.dontReset && rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
                 log(chalk.underline('merge rejected, reseting'));
