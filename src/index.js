@@ -15,10 +15,8 @@ var exec = require('child_process').exec;
 var prompt = require('./utils/prompt.js');
 function toMaster() {
     log.task('tomaster');
-    var transferFilesToMaster = (files)=> {
-        log.task('checking out');
-        log.info(files.modified.concat(files.created));
-        throw'';
+    function transferFilesToMaster(files){
+        log.task('checking out', files);
         return gitUtils.run('git checkout master')
             .then(()=> {
                 log.task('copying into master');
@@ -44,21 +42,19 @@ function toMaster() {
     return status()
         .then((statusObj)=> {
             log.task('verify no commit pending');
-            //log.info(_.all(statusObj, (arr)=> arr.length === 0));
-            //if (!_.all(statusObj, (arr)=> arr.length === 0)) {
-            //    log.err('commit pending');
-            //    throw {
-            //        err: 'ERROR: commit your changes before transfering to master',
-            //        stderr: JSON.stringify(statusObj, null, '\t')
-            //    }
-            //}
+            if (!_.all(statusObj, (arr)=> arr.length === 0)) {
+                log.err('commit pending');
+                throw {
+                    err: 'ERROR: commit your changes before transfering to master',
+                    stderr: JSON.stringify(statusObj, null, '\t')
+                }
+            }
             return statusObj;
         })
-        .then((flags.skipMerge && diff()) || gitUtils.merge().then(diff))
+        .then(()=>(flags.skipMerge && diff()) || gitUtils.merge().then(diff))
         .then((files)=> {
-            log(files);
             prepareFiles(files);
-            return transferFilesToMaster(files);
+            transferFilesToMaster(files);
 
         });
 }
