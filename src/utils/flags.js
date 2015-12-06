@@ -3,7 +3,7 @@
  */
 var _ = require('lodash-node');
 var flags = _.chain(process.argv)
-    .filter((arg)=>_.startsWith(arg, '--'))
+    .filter((arg)=>_.startsWith(arg, '--') && !_.contains(arg, '='))
     .map((arg)=>arg.toLowerCase())
     .value();
 
