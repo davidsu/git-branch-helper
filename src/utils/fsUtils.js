@@ -5,8 +5,8 @@
 var fs = require('fs');
 var path = require('path');
 var pathSeparatorRe = /[\/\\]/g;
-var errLog = require('./console').errLog;
-var log = require('./console').log;
+var errLog = require('./logUtils').errLog;
+var log = require('./logUtils').log;
 module.exports.copy = function (srcpath, destpath) {
 
     try{
