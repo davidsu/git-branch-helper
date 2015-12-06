@@ -5,46 +5,42 @@ var _ = require('lodash-node');
 var fsUtils = require('./utils/fsUtils');
 var gitUtils = require('./utils/gitUtils');
 var flags = require('./utils/flags');
+var defaultReject = require('./utils/promiseUtils').defaultReject;
 
-var log = console.log;
-var logErr = (err)=>log(chalk.red(err));
-var logUnderline = (msg)=>log(chalk.underline(msg));
+var log = require('./utils/logUtils');
 var shouldLog, skipMerge;
-
 
 var exec = require('child_process').exec;
 
 var prompt = require('./utils/prompt.js');
 function toMaster() {
-    logUnderline('tomaster');
+    log.task('tomaster');
     var transferFilesToMaster = (files)=> {
-        shouldLog && console.log('checking out');
-        return new Promise((resolve, reject)=> {
-            exec('git checkout master', (err, stdout, stderr)=> {
-                if (err) {
-                    reject(err, stderr);
-                }
+        flags.shouldLog && console.log('checking out');
+        return gitUtils.run('git checkout master')
+            .then(()=> {
                 _.forEach(files.add, (_file)=>fsUtils.copy('tmp/' + _file, _file));
+            })
+            .then(()=> {
                 exec('rm -rf tmp');
                 _.forEach(files.del, (file)=>exec('rm ' + file));
-                resolve();
             });
-        });
 
     };
     var prepareFiles = (files)=> {
         _.forEach(files.add, (_file)=>fsUtils.copy(_file, 'tmp/' + _file));
     };
 
-    var promis = (skipMerge && diff()) || merge().then(diff, defaultReject);
+    var promis = (flags.skipMerge && diff()) || gitUtils.merge().then(diff);
     return promis.then((files)=> {
         prepareFiles(files);
-        transferFilesToMaster(files);
-    }, defaultReject);
+        return transferFilesToMaster(files);
+
+    });
 }
-//c
+
 function status() {
-    logUnderline('status');
+    log.task('status');
     return new Promise((resolve, reject)=> {
         exec("git status --porcelain", (error, stdout, stderr)=> {
             error && reject(chalk.red(error, stderr));
@@ -67,11 +63,9 @@ function status() {
         });
 
 }
-//d
 
-function diff() {
-
-    shouldLog && log('diffing');
+function diff(dontLog) {
+    log.task('diff');
     return new Promise((resolve, reject)=> {
         exec("git diff master --name-status", (error, stdout, stderr)=> {
             if (error) {
@@ -91,27 +85,13 @@ function diff() {
                     res[input[0]].push(input.substring(2).trim());
                 }
             });
-            console.log(res);
+            //todo log same as in status
+            !dontLog && log.info(res);
             res.add = res.M.concat(res.C).concat(res.A);
             res.del = res.D;
             resolve(res);
         });
     });
-}
-
-
-
-
-
-function setFlags(flagsArg) {
-    Log = flags.shouldLog = _.contains(flagsArg, '--log');
-    skipMerge = flags.skipMerge = _.contains(flagsArg, '--skipMerge')
-}
-
-function defaultReject(err, stderr) {
-    err && logErr(err);
-    stderr && logErr(stderr);
-    process.exit(1);
 }
 
 var cmds = {
@@ -138,17 +118,13 @@ var shortCuts = {
 _.assign(cmds, shortCuts, tmp);
 
 function performCmdsInOrder(userArgs) {
-    setFlags(_.chain(userArgs)
-            .filter((arg)=>_.startsWith(arg, '--'))
-            .map((arg)=>arg.toLowerCase())
-            .value()
-    );
     var cmdNames = _.filter(userArgs, (arg)=>!_.startsWith(arg, '--'));
     var cmd, promise = cmds[cmdNames.shift()]();
     while ((cmd = cmdNames.shift())) {
-        promise = promise.then(cmds[cmd], defaultReject);
+        promise = promise.then(cmds[cmd]);
     }
-    promise.then(prompt.end, defaultReject);
+    promise.then(prompt.end)
+        .catch(defaultReject);
 }
 //console.log(process.argv);
 //process.exit(0);

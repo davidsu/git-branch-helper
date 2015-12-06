@@ -10,17 +10,29 @@ var log = console.log;
 var logErr = (err)=>log(chalk.red(err));
 var logUnderline = (msg)=>log(chalk.underline(msg));
 
-function _run(cmd) {
+function run(cmd) {
     return new Promise((resolve, reject)=> {
         exec(cmd, (err, stdin, stderr)=> {
             err && reject({
-                err :err
-                , stderr:stderr
-                , stdin:stdin
+                err: err
+                , stderr: stderr
+                , stdin: stdin
             });
             resolve(stdin);
-        })
-    })
+        });
+    });
+}
+function merge() {
+    log(chalk.underline('merging'));
+    return run('git merge master')
+        .catch((rejectObj)=> {
+            if (rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
+                log(chalk.underline('merge rejected, reseting'));
+                return run('git reset --hard')
+                    .then(()=> { throw rejectObj; });
+            }
+            throw rejectObj;
+        });
 }
 function parseStatus(status) {
     var line;
@@ -59,7 +71,7 @@ function parseStatus(status) {
         modified: modified,
         created: created
     };
-};
+}
 
 function commit(msg, isRecursing) {
     !isRecursing && logUnderline('commit');
@@ -69,11 +81,11 @@ function commit(msg, isRecursing) {
                 commit(cmsg, true);
             })
     }
-    return _run('git add . && git commit -m"' + msg + '"');
+    return run('git add . && git commit -m"' + msg + '"');
 }
 
 function currBranch(showAll) {
-    return _run('git branch')
+    return run('git branch')
         .then((stdin)=> {
             var currBranchName = null;
             _.forEach(stdin.split('\n'), (branch)=> {
@@ -83,6 +95,9 @@ function currBranch(showAll) {
                 (flags.shouldLog || showAll) && log(branch.trim());
 
             });
+            if (currBranchName) {
+                throw 'can\'t find current branch, are you in a git repo folder?'
+            }
             return currBranchName;
         });
 }
@@ -95,27 +110,14 @@ function checkout(branchName, isRecursing) {
             .then(()=>prompt.question(chalk.cyan.underline('choose branch to checkout:')))
             .then((bname)=>checkout(bname));
     }
-    return _run('git checkout ' + branchName);
+    return run('git checkout ' + branchName);
 }
 
-function merge() {
-    log(chalk.underline('merging'));
-    return _run('git merge master')
-        .then(()=>{}, (rejectObj)=>{
-            if(rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1){
-                log(chalk.underline('merge rejected, reseting'));
-                exec('git reset --hard');
-            }
-            rejectObj.err && log(chalk.red(rejectObj.err));
-            rejectObj.stderr && logErr(rejectObj.stderr);
-            process.exit(1);
-
-        });
-}
 
 module.exports.simpleCommit = ()=>commit('.');
 module.exports.commit = commit;
 module.exports.currBranch = currBranch;
 module.exports.checkout = checkout;
 module.exports.merge = merge;
+module.exports.run = run;
 module.exports.parseStatus = parseStatus;
