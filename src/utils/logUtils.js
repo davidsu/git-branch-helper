@@ -3,6 +3,7 @@
  */
 var chalk = require('chalk');
 
+var log = console.log;
 module.exports.log = console.log;
 module.exports.errLog = (err)=>log(chalk.red(err));
 module.exports.task = (msg)=>log(chalk.underline(msg));
