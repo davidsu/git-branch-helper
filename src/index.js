@@ -25,6 +25,7 @@ function toMaster() {
                     log('tmp/' + file, file);
                     fsUtils.copy('tmp/' + file, file)
                 });
+                throw '';
             })
             .then(()=> {
                 log.task('deleting from master');
