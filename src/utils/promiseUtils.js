@@ -4,6 +4,7 @@
 var chalk = require('chalk');
 var log = require('./logUtils');
 function defaultReject(rejectObj) {
+    log.task('defaultReject');
     rejectObj.err && log.err(rejectObj.err);
     rejectObj.stderr && log.info(chalk.cyan('STDERR'));
     rejectObj.stderr && log.err(rejectObj.stderr);
