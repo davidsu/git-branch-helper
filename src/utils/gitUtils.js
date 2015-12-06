@@ -22,7 +22,7 @@ function run(cmd) {
     });
 }
 function merge() {
-    log(chalk.underline('merging'));
+    log.task('merging');
     return run('git merge master')
         .catch((rejectObj)=> {
             if (rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
