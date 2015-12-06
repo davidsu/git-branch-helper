@@ -37,7 +37,8 @@ function toMaster() {
     return status()
         .then((statusObj)=> {
             log.task('verify no commit pending');
-            if (_.reduce(statusObj, (acc, arr, key)=> acc + arr.length)) {
+            log.info(_.all(statusObj, (arr)=> arr.length === 0));
+            if (_.all(statusObj, (arr)=> arr.length === 0)) {
                 log.err('commit pending');
                 throw {
                     err: 'ERROR: commit your changes before transfering to master',

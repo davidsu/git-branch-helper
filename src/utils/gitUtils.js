@@ -9,7 +9,7 @@ var exec = require('child_process').exec;
 var log = require('./logUtils');
 
 function run(cmd) {
-    log.task('gitUtils.run ===>  '+cmd);
+    log.task('gitUtils.run ===>  ' + cmd);
     return new Promise((resolve, reject)=> {
         exec(cmd, (err, stdout, stderr)=> {
             err && reject({
@@ -76,7 +76,9 @@ function parseStatus(status) {
 function commit(msg, isRecursing) {
     !isRecursing && log.task('commit');
     if (!msg) {
-        return prompt.question('commit message:\n')
+        return run('git log --format=%B -1')
+            .then((stdout)=> {log.info('last commit:\n' + stdout);})
+            .then(()=>prompt.question('commit message:\n'))
             .then((cmsg)=> {
                 commit(cmsg, true);
             })
