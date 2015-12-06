@@ -14,28 +14,9 @@ var shouldLog, skipMerge;
 var exec = require('child_process').exec;
 var prompt = require('./utils/prompt.js');
 
-const TMP_FOLDER = process.env.HOME +'/.gbh/tmp';
+const TMP_FOLDER = process.env.HOME +'/.gbh/tmp/';
 function toMaster() {
     log.task('tomaster');
-    function transferFilesToMaster(files) {
-        log.task('checking out', files);
-        return gitUtils.run('git checkout master')
-            .then(()=> {
-                log.task('copying into master');
-                log.info(files.modified.concat(files.created));
-                _.forEach(files.modified.concat(files.created), (file)=> {
-                    log('tmp/' + file, file);
-                    fsUtils.copy('tmp/' + file, file)
-                });
-                throw '';
-            })
-            .then(()=> {
-                log.task('deleting from master');
-                exec('rm -rf tmp');
-                _.forEach(files.deleted, (file)=>exec('rm ' + file));
-            });
-
-    }
 
     return status()
         .then((statusObj)=> {
@@ -57,16 +38,6 @@ function toMaster() {
         });
 }
 
-//gitUtils.getBranches(false)
-//    .then((branches)=> {
-//        if (!_.contains(branches, branch)) {
-//            throw {
-//                err: (branch && 'no such branch ' + branch) || 'no branch defined, use -b="branchName'
-//            };
-//        }
-//        return branch;
-//    })
-//    .then(()=> {
 function transferFilesToBranch(files, branch) {
     log.task('transfer files to branch ' + branch);
     branch = branch || params.branch;

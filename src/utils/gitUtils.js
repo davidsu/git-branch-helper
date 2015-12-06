@@ -102,17 +102,6 @@ function currBranch(showAll) {
             return currBranchName;
         });
 }
-function getBranches(showAll) {
-    return run('git branch')
-        .then((stdout)=> {
-            return _.map(stdout.split('\n'), (branch)=> {
-                branch = branch[0] === '*' ? branch.substring(1).trim() : branch;
-                (flags.shouldLog || showAll) && log(branch.trim());
-                return branch;
-
-            });
-        });
-}
 function checkout(branchName, isRecursing) {
     !isRecursing && log(chalk.underline('checkout ' + branchName));
     if (!branchName) {
@@ -128,7 +117,6 @@ function checkout(branchName, isRecursing) {
 module.exports.simpleCommit = ()=>commit('.');
 module.exports.commit = commit;
 module.exports.currBranch = currBranch;
-module.exports.getBranches = getBranches;
 module.exports.checkout = checkout;
 module.exports.merge = merge;
 module.exports.run = run;
