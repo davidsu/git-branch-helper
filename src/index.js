@@ -24,7 +24,7 @@ function toMaster() {
             })
             .then(()=> {
                 log.task('deleting from master');
-                exec('rm -rf tmp');
+               // exec('rm -rf tmp');
                 _.forEach(files.deleted, (file)=>exec('rm ' + file));
             });
 
