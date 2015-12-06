@@ -7,6 +7,7 @@ var gitUtils = require('./utils/gitUtils');
 var flags = require('./utils/flags');
 var params = require('./utils/params');
 var defaultReject = require('./utils/promiseUtils').defaultReject;
+var exit = defaultReject;
 
 var log = require('./utils/logUtils');
 var shouldLog, skipMerge;
@@ -15,8 +16,15 @@ var exec = require('child_process').exec;
 var prompt = require('./utils/prompt.js');
 
 const TMP_FOLDER = process.env.HOME +'/.gbh/tmp/';
-function toMaster() {
-    log.task('tomaster');
+
+function toMaster(){
+    return toBranch('master');
+}
+
+function toBranch(branch) {
+    branch = branch || params.branch;
+    log.task('tobranch: ' + branch);
+    !branch && exit({err: 'no branch specified'});
 
     return status()
         .then((statusObj)=> {
@@ -30,10 +38,10 @@ function toMaster() {
             }
             return statusObj;
         })
-        .then(()=>(flags.skipMerge && diff()) || gitUtils.merge().then(diff))
+        .then(()=>(flags.skipMerge && diff(branch)) || gitUtils.merge(branch).then(()=>diff(branch)))
         .then((files)=> {
             prepareFiles(files);
-            transferFilesToBranch(files, 'master');
+            transferFilesToBranch(files, branch);
 
         });
 }
@@ -70,9 +78,10 @@ function status() {
         .then(log.status);
 }
 
-function diff() {
+function diff(branch) {
     log.task('diff');
-    return gitUtils.run('git diff master --name-status')
+    branch = branch || 'master';
+    return gitUtils.run('git diff '+branch+' --name-status')
         .then(gitUtils.parseStatus)
         .then(log.status);
 }

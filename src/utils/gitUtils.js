@@ -21,9 +21,9 @@ function run(cmd) {
         });
     });
 }
-function merge() {
+function merge(branch) {
     log.task('merging');
-    return run('git merge master')
+    return run('git merge '+branch)
         .catch((rejectObj)=> {
             if (rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
                 log(chalk.underline('merge rejected, reseting'));

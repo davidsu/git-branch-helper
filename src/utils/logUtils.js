@@ -7,7 +7,6 @@ var _ = require('lodash');
 var log = console.log;
 
 function logStatus(statusObj) {
-    log(statusObj);
     var res = _.chain([
         chalk.yellow(statusObj.not_added.join('\n')),
         chalk.red(statusObj.deleted.join('\n')),
