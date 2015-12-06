@@ -20,12 +20,12 @@ function toMaster() {
         return gitUtils.run('git checkout master')
             .then(()=> {
                 log.task('copying into master');
-                _.forEach(files.add, (_file)=>fsUtils.copy('tmp/' + _file, _file));
+                _.forEach(files.modified.concat(files.created), (file)=>fsUtils.copy('tmp/' + file, file));
             })
             .then(()=> {
                 log.task('deleting from master');
                 exec('rm -rf tmp');
-                _.forEach(files.del, (file)=>exec('rm ' + file));
+                _.forEach(files.deleted, (file)=>exec('rm ' + file));
             });
 
     };
