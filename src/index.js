@@ -31,18 +31,31 @@ function toMaster() {
     };
     var prepareFiles = (files)=> {
         log.task('prepare files');
-        _.forEach(files.add, (_file)=>fsUtils.copy(_file, 'tmp/' + _file));
+        _.forEach(files.modified.concat(files.created), (_file)=>fsUtils.copy(_file, 'tmp/' + _file));
     };
 
-    var promis = (flags.skipMerge && diff()) || gitUtils.merge().then(diff);
-    return promis.then((files)=> {
-        prepareFiles(files);
-        return transferFilesToMaster(files);
+    return status()
+        .then((statusObj)=> {
+            log.task('verify no commit pending');
+            if (_.reduce(statusObj, (acc, arr, key)=> acc + arr.length)) {
+                log.err('commit pending');
+                throw {
+                    err: 'ERROR: commit your changes before transfering to master',
+                    stderr: JSON.stringify(statusObj, null, '\t')
+                }
+            }
+            return statusObj;
+        })
+        .then((flags.skipMerge && diff()) || gitUtils.merge().then(diff))
+        .then((files)=> {
+            log(files);
+            prepareFiles(files);
+            return transferFilesToMaster(files);
 
-    });
+        });
 }
 
-function logStatus(statusObj){
+function logStatus(statusObj) {
     log.task('log status');
     var res = _.chain([
         chalk.yellow(statusObj.not_added.join('\n')),
@@ -99,7 +112,7 @@ function performCmdsInOrder(userArgs) {
     while ((cmd = cmdNames.shift())) {
         promise = promise.then(cmds[cmd]);
     }
-    promise.then(()=>{
+    promise.then(()=> {
         log.task('end');
         prompt.end()
     })
