@@ -6,7 +6,6 @@ var util = require('util');
 var resolvePromise;
 
 process.stdin.on('data', (text)=>{
-    console.log(text);
     resolvePromise(text);
 });
 

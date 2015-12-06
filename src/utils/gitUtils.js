@@ -9,7 +9,32 @@ var exec = require('child_process').exec;
 var log = console.log;
 var logErr = (err)=>log(chalk.red(err));
 var logUnderline = (msg)=>log(chalk.underline(msg));
-module.exports.parseStatus = (status) =>{
+
+function run(cmd) {
+    return new Promise((resolve, reject)=> {
+        exec(cmd, (err, stdin, stderr)=> {
+            err && reject({
+                err: err
+                , stderr: stderr
+                , stdin: stdin
+            });
+            resolve(stdin);
+        });
+    });
+}
+function merge() {
+    log(chalk.underline('merging'));
+    return run('git merge master')
+        .catch((rejectObj)=> {
+            if (rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
+                log(chalk.underline('merge rejected, reseting'));
+                return run('git reset --hard')
+                    .then(()=> { throw rejectObj; });
+            }
+            throw rejectObj;
+        });
+}
+function parseStatus(status) {
     var line;
     var lines = status.trim().split('\n');
 
@@ -46,75 +71,53 @@ module.exports.parseStatus = (status) =>{
         modified: modified,
         created: created
     };
-};
+}
 
-
-function commit(msg) {
-    logUnderline('commit');
-    var gitcommit = (cmsg)=> {
-        return new Promise((resolve, reject)=> {
-            logUnderline('gitcommit');
-            exec('git add . && git commit -m"' + cmsg + '"', (err, i, oerr)=> {
-                if (err) {
-                    logErr(err);
-                    logErr(oerr);
-                    reject();
-                }
-                resolve();
-            });
-        });
-    };
-
-
+function commit(msg, isRecursing) {
+    !isRecursing && logUnderline('commit');
     if (!msg) {
         return prompt.question('commit message:\n')
             .then((cmsg)=> {
-                gitcommit(cmsg);
+                commit(cmsg, true);
             })
-    } else {
-        gitcommit(msg);
     }
+    return run('git add . && git commit -m"' + msg + '"');
 }
 
 function currBranch(showAll) {
-    return new Promise((resolve, reject)=> {
-        exec('git branch', (err, stdin, oer)=> {
-            if (err) {
-                logErr(err);
-                logErr(oer);
-                reject();
-            }
-            var currBranchName;
+    return run('git branch')
+        .then((stdin)=> {
+            var currBranchName = null;
             _.forEach(stdin.split('\n'), (branch)=> {
                 if (branch[0] === '*') {
                     currBranchName = branch.substring(1).trim();
-                    log(chalk.green(currBranchName));
-                } else {
-                    (flags.shouldLog || showAll) && log(branch.trim());
                 }
+                (flags.shouldLog || showAll) && log(branch.trim());
+
             });
-            (!currBranchName && reject('current branch unkown')) || resolve(currBranchName);
+            if (currBranchName) {
+                throw 'can\'t find current branch, are you in a git repo folder?'
+            }
+            return currBranchName;
         });
-    })
 }
 
-function checkout(branchName) {
-
+function checkout(branchName, isRecursing) {
+    !isRecursing && log(chalk.underline('checkout ' + branchName));
     if (!branchName) {
         return currBranch(true)
             .then(log(chalk.cyan.underline('no branch selected')))
             .then(()=>prompt.question(chalk.cyan.underline('choose branch to checkout:')))
             .then((bname)=>checkout(bname));
     }
-    return new Promise((resolve, reject)=> {
-        exec('git checkout ' + branchName, (err, stdout, stderr)=> {
-            err && reject(err, stderr);
-            resolve(stdout);
-        })
-    })
+    return run('git checkout ' + branchName);
 }
+
 
 module.exports.simpleCommit = ()=>commit('.');
 module.exports.commit = commit;
 module.exports.currBranch = currBranch;
 module.exports.checkout = checkout;
+module.exports.merge = merge;
+module.exports.run = run;
+module.exports.parseStatus = parseStatus;
