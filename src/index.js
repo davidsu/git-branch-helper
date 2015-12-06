@@ -5,6 +5,7 @@ var _ = require('lodash-node');
 var fsUtils = require('./utils/fsUtils');
 var gitUtils = require('./utils/gitUtils');
 var flags = require('./utils/flags');
+var params = require('./utils/params');
 var defaultReject = require('./utils/promiseUtils').defaultReject;
 
 var log = require('./utils/logUtils');
@@ -33,11 +34,7 @@ function toMaster() {
                 _.forEach(files.deleted, (file)=>exec('rm ' + file));
             });
 
-    };
-    var prepareFiles = (files)=> {
-        log.task('prepare files');
-        _.forEach(files.modified.concat(files.created), (_file)=>fsUtils.copy(_file, 'tmp/' + _file));
-    };
+    }
 
     return status()
         .then((statusObj)=> {
@@ -59,32 +56,25 @@ function toMaster() {
         });
 }
 
-function logStatus(statusObj) {
-    log.task('log status');
-    var res = _.chain([
-        chalk.yellow(statusObj.not_added.join('\n')),
-        chalk.red(statusObj.deleted.join('\n')),
-        chalk.cyan(statusObj.modified.join('\n')),
-        chalk.green(statusObj.created.join('\n'))
-    ])
-        .filter((str)=>str.length !== 0)
-        .value();
-    log(chalk.yellow('NOT_ADDED ') + chalk.red('DELETED ') + chalk.cyan('MODIFIED ') + chalk.green('CREATED\n'));
-    _.forEach(res, (str)=>log(str));
-    return statusObj;
+
+function prepareFiles (files){
+    log.task('prepare files');
+    _.forEach(files.modified.concat(files.created), (_file)=>fsUtils.copy(_file, 'tmp/' + _file));
 }
+
+
 function status() {
     log.task('status');
     return gitUtils.run("git status --porcelain")
         .then(gitUtils.parseStatus)
-        .then(logStatus);
+        .then(log.status);
 }
 
 function diff() {
     log.task('diff');
     return gitUtils.run('git diff master --name-status')
         .then(gitUtils.parseStatus)
-        .then(logStatus);
+        .then(log.status);
 }
 
 var cmds = {
