@@ -21,6 +21,7 @@ function toMaster() {
             .then(()=> {
                 log.task('copying into master');
                 _.forEach(files.modified.concat(files.created), (file)=>fsUtils.copy('tmp/' + file, file));
+                throw '';
             })
             .then(()=> {
                 log.task('deleting from master');
@@ -31,20 +32,22 @@ function toMaster() {
     };
     var prepareFiles = (files)=> {
         log.task('prepare files');
+        log(files.modified.concat(files.created));
+
         _.forEach(files.modified.concat(files.created), (_file)=>fsUtils.copy(_file, 'tmp/' + _file));
     };
 
     return status()
         .then((statusObj)=> {
             log.task('verify no commit pending');
-            log.info(_.all(statusObj, (arr)=> arr.length === 0));
-            if (!_.all(statusObj, (arr)=> arr.length === 0)) {
-                log.err('commit pending');
-                throw {
-                    err: 'ERROR: commit your changes before transfering to master',
-                    stderr: JSON.stringify(statusObj, null, '\t')
-                }
-            }
+            //log.info(_.all(statusObj, (arr)=> arr.length === 0));
+            //if (!_.all(statusObj, (arr)=> arr.length === 0)) {
+            //    log.err('commit pending');
+            //    throw {
+            //        err: 'ERROR: commit your changes before transfering to master',
+            //        stderr: JSON.stringify(statusObj, null, '\t')
+            //    }
+            //}
             return statusObj;
         })
         .then((flags.skipMerge && diff()) || gitUtils.merge().then(diff))
