@@ -9,4 +9,4 @@ var flags = _.chain(process.argv)
 
 module.exports.shouldLog = _.contains(flags, '--log');
 module.exports.skipMerge = _.contains(flags, '--skip-merge');
-module.exports.contReset = _.contains(flags, '--dont-reset');
+module.exports.dontReset = _.contains(flags, '--dont-reset');
