@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+'use strict';
 
 var chalk = require('chalk');
 var _ = require('lodash');
@@ -109,11 +110,16 @@ var shortCuts = {
 };
 _.assign(cmds, shortCuts, tmp);
 
+function errOnUknowCmd(cmd){
+    throw {err: 'uknown cmd: '+cmd};
+}
 function performCmdsInOrder(userArgs) {
-    var cmdNames = _.filter(userArgs, (arg)=>!_.startsWith(arg, '--'));
-    var cmd, promise = cmds[cmdNames.shift()]();
+    var cmdNames = _.filter(userArgs, (arg)=>!_.startsWith(arg, '-'));
+    var cmd = cmdNames.shift();
+    var promise = (cmds[cmd] && cmds[cmd]()) || errOnUknowCmd(cmd);
     while ((cmd = cmdNames.shift())) {
-        promise = promise.then(cmds[cmd]);
+        let cmdCache = cmd;
+        promise = promise.then(cmds[cmd] || (()=>{errOnUknowCmd(cmdCache)}));
     }
     promise.then(()=> {
         log.task('end');

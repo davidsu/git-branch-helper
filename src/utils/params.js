@@ -12,6 +12,5 @@ var params = _.chain(process.argv)
     .zipObject()
     .value();
 
-console.log('params', JSON.stringify(params));
 module.exports.branch = params.b || params.branch;
 
