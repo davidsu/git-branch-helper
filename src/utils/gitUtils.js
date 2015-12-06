@@ -6,24 +6,23 @@ var chalk = require('chalk');
 var prompt = require('./prompt');
 var flags = require('./flags');
 var exec = require('child_process').exec;
-var log = console.log;
-var logErr = (err)=>log(chalk.red(err));
-var logUnderline = (msg)=>log(chalk.underline(msg));
+var log = require('./logUtils');
 
 function run(cmd) {
+    log.task('gitUtils.run ===>  ' + cmd);
     return new Promise((resolve, reject)=> {
-        exec(cmd, (err, stdin, stderr)=> {
+        exec(cmd, (err, stdout, stderr)=> {
             err && reject({
                 err: err
                 , stderr: stderr
-                , stdin: stdin
+                , stdin: stdout
             });
-            resolve(stdin);
+            resolve(stdout);
         });
     });
 }
 function merge() {
-    log(chalk.underline('merging'));
+    log.task('merging');
     return run('git merge master')
         .catch((rejectObj)=> {
             if (rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
@@ -35,6 +34,7 @@ function merge() {
         });
 }
 function parseStatus(status) {
+    log.task('gitUtils.parseStatus');
     var line;
     var lines = status.trim().split('\n');
 
@@ -74,9 +74,11 @@ function parseStatus(status) {
 }
 
 function commit(msg, isRecursing) {
-    !isRecursing && logUnderline('commit');
+    !isRecursing && log.task('commit');
     if (!msg) {
-        return prompt.question('commit message:\n')
+        return run('git log --format=%B -1')
+            .then((stdout)=> {log.info('last commit:\n' + stdout);})
+            .then(()=>prompt.question('commit message:\n'))
             .then((cmsg)=> {
                 commit(cmsg, true);
             })
