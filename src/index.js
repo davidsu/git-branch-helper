@@ -12,17 +12,18 @@ var log = require('./utils/logUtils');
 var shouldLog, skipMerge;
 
 var exec = require('child_process').exec;
-
 var prompt = require('./utils/prompt.js');
+
+const TMP_FOLDER = process.env.HOME +'/.gbh/tmp';
 function toMaster() {
     log.task('tomaster');
-    function transferFilesToMaster(files){
+    function transferFilesToMaster(files) {
         log.task('checking out', files);
         return gitUtils.run('git checkout master')
             .then(()=> {
                 log.task('copying into master');
                 log.info(files.modified.concat(files.created));
-                _.forEach(files.modified.concat(files.created), (file)=>{
+                _.forEach(files.modified.concat(files.created), (file)=> {
                     log('tmp/' + file, file);
                     fsUtils.copy('tmp/' + file, file)
                 });
@@ -51,13 +52,42 @@ function toMaster() {
         .then(()=>(flags.skipMerge && diff()) || gitUtils.merge().then(diff))
         .then((files)=> {
             prepareFiles(files);
-            transferFilesToMaster(files);
+            transferFilesToBranch(files, 'master');
 
         });
 }
 
+//gitUtils.getBranches(false)
+//    .then((branches)=> {
+//        if (!_.contains(branches, branch)) {
+//            throw {
+//                err: (branch && 'no such branch ' + branch) || 'no branch defined, use -b="branchName'
+//            };
+//        }
+//        return branch;
+//    })
+//    .then(()=> {
+function transferFilesToBranch(files, branch) {
+    log.task('transfer files to branch ' + branch);
+    branch = branch || params.branch;
+    return gitUtils.run('git checkout '+branch)
+        .then(()=> {
+            log.task('copying into '+branch);
+            log.info(files.modified.concat(files.created));
+            _.forEach(files.modified.concat(files.created), (file)=> {
+                fsUtils.copy(TMP_FOLDER + file, file)
+            });
+            throw '';
+        })
+        .then(()=> {
+            log.task('deleting from master');
+            exec('rm -rf '+TMP_FOLDER);
+            _.forEach(files.deleted, (file)=>exec('rm ' + file));
+        });
+}
 
-function prepareFiles (files){
+
+function prepareFiles(files) {
     log.task('prepare files');
     _.forEach(files.modified.concat(files.created), (_file)=>fsUtils.copy(_file, 'tmp/' + _file));
 }
