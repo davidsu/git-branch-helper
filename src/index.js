@@ -113,7 +113,7 @@ var shortCuts = {
 _.assign(cmds, shortCuts, tmp);
 
 function performCmdsInOrder(userArgs) {
-    var cmdNames = _.filter(userArgs, (arg)=>!_.startsWith(arg, '--'));
+    var cmdNames = _.filter(userArgs, (arg)=>!_.startsWith(arg, '-'));
     var cmd = cmdNames.shift();
     var promise = (cmds[cmd] && cmds[cmd]()) || defaultReject({err: 'uknown cmd: ' + cmd});
     while ((cmd = cmdNames.shift())) {
