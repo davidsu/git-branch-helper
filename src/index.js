@@ -77,7 +77,6 @@ function transferFilesToBranch(files, branch) {
             _.forEach(files.modified.concat(files.created), (file)=> {
                 fsUtils.copy(TMP_FOLDER + file, file)
             });
-            throw '';
         })
         .then(()=> {
             log.task('deleting from master');
@@ -89,7 +88,7 @@ function transferFilesToBranch(files, branch) {
 
 function prepareFiles(files) {
     log.task('prepare files');
-    _.forEach(files.modified.concat(files.created), (_file)=>fsUtils.copy(_file, 'tmp/' + _file));
+    _.forEach(files.modified.concat(files.created), (_file)=>fsUtils.copy(_file, TMP_FOLDER + _file));
 }
 
 
