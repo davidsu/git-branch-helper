@@ -1,0 +1,2 @@
+to release next version of your package:
+npm publish

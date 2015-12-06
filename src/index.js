@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var chalk = require('chalk');
-var _ = require('lodash-node');
+var _ = require('lodash');
 var fsUtils = require('./utils/fsUtils');
 var gitUtils = require('./utils/gitUtils');
 var flags = require('./utils/flags');

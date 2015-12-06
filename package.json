@@ -1,15 +1,13 @@
 {
   "name": "git-branch-helper",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "gbh stands for git branch help. utilities to copy changes from branch into master without merging",
-  "scripts":{
+  "scripts": {
     "start": "node src/index.js"
   },
   "dependencies": {
     "chalk": "^1.1.1",
-    "grunt": "^0.4.5",
-    "lodash-node": "^3.10.1",
-    "simple-git": "^1.16.0"
+    "lodash": "^3.10.1"
   },
   "preferGlobal": true,
   "bin": {

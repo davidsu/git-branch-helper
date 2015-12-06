@@ -2,7 +2,7 @@
  * Created by davidsu on 04/12/2015.
  */
 var chalk = require('chalk');
-var _ = require('lodash-node');
+var _ = require('lodash');
 
 var log = console.log;
 

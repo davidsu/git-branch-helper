@@ -1,7 +1,7 @@
 /**
  * Created by davidsu on 04/12/2015.
  */
-var _ = require('lodash-node');
+var _ = require('lodash');
 var chalk = require('chalk');
 var prompt = require('./prompt');
 var flags = require('./flags');

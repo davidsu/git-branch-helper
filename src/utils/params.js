@@ -2,7 +2,7 @@
  * Created by davidsu on 06/12/2015.
  */
 
-var _ = require('lodash-node');
+var _ = require('lodash');
 var params = _.chain(process.argv)
     .filter((arg)=>_.startsWith(arg, '-') && _.contains(arg, '='))
     .map((arg)=>{
