@@ -16,7 +16,7 @@ var exec = require('child_process').exec;
 var prompt = require('./utils/prompt.js');
 
 const TMP_FOLDER = process.env.HOME +'/.gbh/tmp/';
-
+//comment
 function toMaster(){
     return toBranch('master');
 }
@@ -90,6 +90,7 @@ var cmds = {
     status: status,
     diff: diff,
     toMaster: toMaster,
+    toBranch: toBranch,
     checkout: gitUtils.checkout,
     merge: gitUtils.merge,
     simpleCommit: gitUtils.simpleCommit,
