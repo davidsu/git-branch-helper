@@ -18,6 +18,7 @@ function toMaster() {
     var transferFilesToMaster = (files)=> {
         log.task('checking out');
         log.info(files.modified.concat(files.created));
+        throw'';
         return gitUtils.run('git checkout master')
             .then(()=> {
                 log.task('copying into master');
