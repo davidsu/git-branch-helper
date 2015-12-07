@@ -8,6 +8,7 @@ function defaultReject(rejectObj) {
     rejectObj.err && log.err(rejectObj.err);
     rejectObj.stderr && log.info(chalk.cyan('STDERR'));
     rejectObj.stderr && log.err(rejectObj.stderr);
+    rejectObj.err || rejectObj.stderr || log.warn('bad reject format\n'+rejectObj);
     process.exit(1);
 }
 

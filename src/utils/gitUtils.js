@@ -95,11 +95,13 @@ function currBranch(showAll) {
             _.forEach(stdin.split('\n'), (branch)=> {
                 if (branch[0] === '*') {
                     currBranchName = branch.substring(1).trim();
-                }
+                    (flags.shouldLog || showAll) && log.ok(branch.trim());
+                }else{
                 (flags.shouldLog || showAll) && log(branch.trim());
+                }
 
             });
-            if (currBranchName) {
+            if (!currBranchName) {
                 throw 'can\'t find current branch, are you in a git repo folder?'
             }
             return currBranchName;
