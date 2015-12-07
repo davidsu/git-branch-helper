@@ -25,4 +25,5 @@ module.exports.status = logStatus;
 module.exports.err = (err)=>log(chalk.red(err));
 module.exports.task = (msg)=>log(chalk.underline('\n'+msg));
 module.exports.info = (msg)=>log(chalk.cyan(msg));
-module.exports.greenLog = (msg)=>log(chalk.green(msg));
+module.exports.ok = (msg)=>log(chalk.green(msg));
+module.exports.warn = (msg)=>log(chalk.yellow(msg));
