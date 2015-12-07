@@ -5,6 +5,7 @@ var _ = require('lodash');
 var chalk = require('chalk');
 var prompt = require('./prompt');
 var flags = require('./flags');
+var params = require('./params')
 var exec = require('child_process').exec;
 var log = require('./logUtils');
 
@@ -23,9 +24,11 @@ function run(cmd) {
 }
 function merge(branch) {
     log.task('merging');
-    return run('git merge '+branch)
+    branch = branch || params.branch || 'master';
+    log.info(branch);
+    return run('git merge ' + branch)
         .catch((rejectObj)=> {
-            if (rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
+            if (!flags.dontReset && rejectObj.stdin.indexOf('Automatic merge failed; fix conflicts and then commit the result.') !== -1) {
                 log(chalk.underline('merge rejected, reseting'));
                 return run('git reset --hard')
                     .then(()=> { throw rejectObj; });
