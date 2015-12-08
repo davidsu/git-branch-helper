@@ -81,7 +81,7 @@ function status() {
 
 function diff(branch) {
     log.task('diff');
-    branch = branch || 'master';
+    branch = branch || params.branch || 'master';
     return gitUtils.run('git diff ' + branch + ' --name-status')
         .then(gitUtils.parseStatus)
         .then(log.status);
