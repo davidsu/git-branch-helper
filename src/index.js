@@ -22,12 +22,18 @@ function toMaster() {
     return toBranch('master');
 }
 
-function toBranch(branch) {
-    branch = branch || params.branch;
-    log.task('tobranch: ' + branch);
-    !branch && exit({err: 'no branch specified'});
+function setBranch(){
+    return gitUtils.currBranch(true)
+    .then(()=>prompt.question('select branch: '))
+    .then(params.setBranch);
+}
 
-    return status()
+function toBranch(branch) {
+    branch = branch || params.branch ;
+    log.task('tobranch: ' + branch);
+    //!branch && exit({err: 'no branch specified'});
+
+    return ((branch &&status())||setBranch().then(status))
         .then((statusObj)=> {
             log.task('verify no commit pending');
             if (!_.all(statusObj, (arr)=> arr.length === 0)) {
