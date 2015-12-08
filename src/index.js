@@ -38,6 +38,8 @@ function toBranch(branch) {
             .then((branch)=> { return params.setBranch(branch) })
             .then((b)=> { branch = b })
             .then(()=>{
+                log.info('branch: '+branch);
+                log.info('currbranch: '+currBranch);
                 if(currBranch === branch){
                     throw {
                         err: 'selected branch is same as current branch.\ncan\'t merge into self'
