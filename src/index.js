@@ -25,9 +25,9 @@ function toMaster() {
 function setBranch() {
     return gitUtils.currBranch(true)
         .then(()=>prompt.question('select branch: '))
-        .then(params.setBranch)
-        .then(log.info(params.branch))
-        .then(exit());
+        .then((branch)=> {params.setBranch(branch)});
+
+    //.then(exit({err:'nono'}));
 }
 
 function toBranch(branch) {
@@ -40,10 +40,9 @@ function toBranch(branch) {
             log.task('verify no commit pending');
             if (!_.all(statusObj, (arr)=> arr.length === 0)) {
                 log.err('commit pending');
-                throw {
-                    err: 'ERROR: commit your changes before transfering to master',
-                    stderr: JSON.stringify(statusObj, null, '\t')
-                }
+                log.err('commit your changes before proceeding');
+                return gitUtils.commit()
+                    .then(status);
             }
             return statusObj;
         })

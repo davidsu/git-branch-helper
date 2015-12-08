@@ -3,7 +3,7 @@
  */
 
 var _ = require('lodash');
-
+var branch;
 var params = _.chain(process.argv)
     .filter((arg)=>_.startsWith(arg, '-') && _.contains(arg, '='))
     .map((arg)=>{
@@ -13,10 +13,12 @@ var params = _.chain(process.argv)
     .zipObject()
     .value();
 
-function setBranch(branch){
-    module.exports.branch = branch;
-    return branch;
+function setBranch(branchArg){
+    branch = branchArg;
+    return branchArg;
 }
-module.exports.branch = params.b || params.branch;
+branch = params.b || params.branch;
+module.exports.branch = branch;
 module.exports.setBranch = setBranch;
+module.exports.getBranch = function(){return branch;};
 
