@@ -95,7 +95,11 @@ function diff(branch) {
     branch = branch || params.getBranch();
     if (!branch && flags.branch) {
         return prompt.question()
+        .then(runDiff);
+    }else if(!branch){
+        return runDiff('master');
     }
+    return runDiff(branch);
 
 }
 function runDiff(branch) {
