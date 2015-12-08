@@ -22,13 +22,6 @@ function toMaster() {
     return toBranch('master');
 }
 
-function setBranch() {
-    return gitUtils.currBranch(true)
-        .then(()=>prompt.question('select branch: '))
-        .then((branch)=> {params.setBranch(branch)});
-
-    //.then(exit({err:'nono'}));
-}
 
 function toBranch(branch) {
     branch = branch || params.branch;
@@ -38,8 +31,19 @@ function toBranch(branch) {
     if (branch) {
         promise = status();
     } else {
-        promise = setBranch()
+        var currBranch;
+        promise = gitUtils.currBranch(true)
+            .then((currBranchResponse)=>{ currBranch = currBranchResponse; })
+            .then(()=>prompt.question('select branch: '))
+            .then((branch)=> { return params.setBranch(branch) })
             .then((b)=> { branch = b })
+            .then(()=>{
+                if(currBranch === branch){
+                    throw {
+                        err: 'selected branch is same as current branch.\ncan\'t merge into self'
+                    };
+                }
+            })
             .then(status);
     }
     return promise
