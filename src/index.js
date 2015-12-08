@@ -92,7 +92,7 @@ function status() {
 
 function diff(branch) {
     log.task('diff');
-    branch = branch || params.branch;
+    branch = branch || params.getBranch();
     if (!branch && flags.branch) {
         return prompt.question()
     }
