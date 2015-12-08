@@ -26,21 +26,13 @@ function toMaster() {
 function toBranch(branch) {
     branch = branch || params.branch;
     log.task('tobranch: ' + branch);
-    //!branch && exit({err: 'no branch specified'});
     var promise;
     if (branch) {
         promise = status();
     } else {
-        var currBranch;
-        promise = gitUtils.currBranch(true)
-            .then((currBranchResponse)=>{ currBranch = currBranchResponse; })
-            .then(()=>prompt.question('select branch: '))
-            .then((branch)=> { return params.setBranch(branch) })
-            .then((b)=> { branch = b })
-            .then(()=>{
-                log.info('branch: '+branch);
-                log.info('currbranch: '+currBranch);
-                if(currBranch === branch){
+        promise = prompt.branch()
+            .then((branchObj)=> {
+                if (branchObj.currBranch === branchObj.selectedBranch) {
                     throw {
                         err: 'selected branch is same as current branch.\ncan\'t merge into self'
                     };
@@ -85,12 +77,10 @@ function transferFilesToBranch(files, branch) {
         });
 }
 
-
 function prepareFiles(files) {
     log.task('prepare files');
     _.forEach(files.modified.concat(files.created), (_file)=>fsUtils.copy(_file, TMP_FOLDER + _file));
 }
-
 
 function status() {
     log.task('status');
@@ -101,7 +91,13 @@ function status() {
 
 function diff(branch) {
     log.task('diff');
-    branch = branch || params.branch || 'master';
+    branch = branch || params.branch;
+    if (!branch && flags.branch) {
+        return prompt.question()
+    }
+
+}
+function runDiff(branch) {
     return gitUtils.run('git diff ' + branch + ' --name-status')
         .then(gitUtils.parseStatus)
         .then(log.status);

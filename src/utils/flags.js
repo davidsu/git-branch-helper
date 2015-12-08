@@ -10,3 +10,4 @@ var flags = _.chain(process.argv)
 module.exports.shouldLog = _.contains(flags, '--log');
 module.exports.skipMerge = _.contains(flags, '--skip-merge');
 module.exports.dontReset = _.contains(flags, '--dont-reset');
+module.exports.branch = _.contains(flags, '-b') || _.contains(flags, '--branch')
