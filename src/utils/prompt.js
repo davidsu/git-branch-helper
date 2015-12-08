@@ -28,8 +28,8 @@ module.exports.branch = ()=> {
         .then((b)=> {
             params.setBranch(b.trim());
             return{
-                currBranch: currBranch,
-                selectedBranch: b
+                currBranch: currBranch.trim(),
+                selectedBranch: b.trim()
             };
         })
 };
