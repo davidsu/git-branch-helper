@@ -14,6 +14,7 @@ var params = _.chain(process.argv)
     .value();
 
 function setBranch(branch){
+    module.exports.branch = branch;
     return branch;
 }
 module.exports.branch = params.b || params.branch;
