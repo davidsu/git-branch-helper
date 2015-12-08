@@ -24,7 +24,7 @@ function run(cmd) {
 }
 function merge(branch) {
     log.task('merging');
-    branch = branch || params.branch || 'master';
+    branch = branch || params.getBranch() || 'master';
     log.info(branch);
     return run('git merge ' + branch)
         .catch((rejectObj)=> {
@@ -118,10 +118,32 @@ function checkout(branchName, isRecursing) {
     return run('git checkout ' + branchName);
 }
 
+function getAllBranches(){
+    return run('git branch')
+        .then((stdin)=> {
+            return _.map(stdin.split('\n'), (branch)=> {
+                if (branch[0] === '*') {
+                    return branch.substring(1).trim();
+                }else{
+                    return branch.trim();
+                }
+
+            });
+        });
+}
+function isValidBranch(branch){
+    return getAllBranches()
+    .then((brancheArr)=>{
+            return _.contains(brancheArr, branch);
+        })
+}
+
 
 module.exports.simpleCommit = ()=>commit('.');
 module.exports.commit = commit;
 module.exports.currBranch = currBranch;
+module.exports.isValidBranch = isValidBranch;
+module.exports.getAllBranches = getAllBranches;
 module.exports.checkout = checkout;
 module.exports.merge = merge;
 module.exports.run = run;

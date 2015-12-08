@@ -26,21 +26,22 @@ function toMaster() {
 function toBranch(branch) {
     branch = branch || params.branch;
     log.task('tobranch: ' + branch);
-    var promise;
-    if (branch) {
-        promise = status();
-    } else {
-        promise = prompt.branch()
-            .then((branchObj)=> {
-                if (branchObj.currBranch === branchObj.selectedBranch) {
-                    throw {
-                        err: 'selected branch is same as current branch.\ncan\'t merge into self'
-                    };
-                }
-            })
-            .then(status);
-    }
-    return promise
+    return gitUtils.isValidBranch(branch)
+        .then((isValidBranch)=> {
+            if (isValidBranch) {
+                return;
+            }
+            return prompt.branch()
+                .then((branchObj)=> {
+                    if (branchObj.currBranch === branchObj.selectedBranch) {
+                        throw {
+                            err: 'selected branch is same as current branch.\ncan\'t merge into self'
+                        };
+                    }
+                    branch = branchObj.selectedBranch;
+                })
+        })
+        .then(status)
         .then((statusObj)=> {
             log.task('verify no commit pending');
             if (!_.all(statusObj, (arr)=> arr.length === 0)) {
