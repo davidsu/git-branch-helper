@@ -22,7 +22,6 @@ function toMaster() {
     return toBranch('master');
 }
 
-
 function toBranch(branch) {
     branch = branch || params.branch;
     log.task('tobranch: ' + branch);
@@ -94,9 +93,10 @@ function diff(branch) {
     log.task('diff');
     branch = branch || params.getBranch();
     if (!branch && flags.branch) {
-        return prompt.question()
-        .then(runDiff);
-    }else if(!branch){
+        return prompt.branch()
+            .then((branchObj)=>branchObj.selectedBranch)
+            .then(runDiff);
+    } else if (!branch) {
         return runDiff('master');
     }
     return runDiff(branch);
