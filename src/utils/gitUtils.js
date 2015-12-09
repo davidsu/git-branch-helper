@@ -5,7 +5,7 @@ var _ = require('lodash');
 var chalk = require('chalk');
 var prompt = require('./prompt');
 var flags = require('./flags');
-var params = require('./params')
+var params = require('./params');
 var exec = require('child_process').exec;
 var log = require('./logUtils');
 
@@ -108,12 +108,12 @@ function currBranch(showAll) {
         });
 }
 function checkout(branchName, isRecursing) {
+    branchName = branchName || params.getBranch();
     !isRecursing && log(chalk.underline('checkout ' + branchName));
     if (!branchName) {
-        return currBranch(true)
-            .then(log(chalk.cyan.underline('no branch selected')))
-            .then(()=>prompt.question(chalk.cyan.underline('choose branch to checkout:')))
-            .then((bname)=>checkout(bname));
+        log.info(chalk.underline('no branch selected'));
+        return prompt.branch(chalk.cyan.underline('choose branch to checkout:'))
+            .then((bname)=>checkout(bname.selectedBranch, true));
     }
     return run('git checkout ' + branchName);
 }
