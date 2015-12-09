@@ -1,6 +1,6 @@
 {
   "name": "git-branch-helper",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "gbh stands for git branch help. utilities to copy changes from branch into master without merging",
   "scripts": {
     "start": "node src/index.js"
