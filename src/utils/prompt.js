@@ -30,7 +30,11 @@ function branch(possibleBranchesList, currBranch) {
     return question('select branch: ')
         .then((b)=> {
             b = b.trim();
-            possibleBranchesList = _.filter(possibleBranchesList, (possibleBranch)=> _.startsWith(possibleBranch, b));
+            if(_.contains(possibleBranchesList, b)){
+                possibleBranchesList = [b];
+            }else {
+                possibleBranchesList = _.filter(possibleBranchesList, (possibleBranch)=> _.startsWith(possibleBranch, b));
+            }
             console.log(possibleBranchesList);
             if (possibleBranchesList.length === 1) {
                 b = possibleBranchesList[0];
