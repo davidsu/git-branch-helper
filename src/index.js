@@ -92,12 +92,10 @@ function status() {
 function diff(branch) {
     log.task('diff');
     branch = branch || params.getBranch();
-    if (!branch && flags.branch) {
+    if (!branch) {
         return prompt.branch()
             .then((branchObj)=>branchObj.selectedBranch)
             .then(runDiff);
-    } else if (!branch) {
-        return runDiff('master');
     }
     return runDiff(branch);
 
@@ -139,7 +137,12 @@ function performCmdsInOrder(userArgs) {
     var promise = (cmds[cmd] && cmds[cmd]()) || defaultReject({err: 'uknown cmd: ' + cmd});
     while ((cmd = cmdNames.shift())) {
         let cacheCmd = cmd;
-        promise = promise.then(cmds[cmd] || (()=> {throw {err: 'uknown cmd: ' + cacheCmd}}));
+        promise = promise.then(()=>{
+            if(cmds[cacheCmd]){
+                return cmds[cacheCmd]();
+            }
+            throw {err: 'uknown cmd: ' + cacheCmd}
+        });
     }
     promise.then(()=> {
         log.task('end');
