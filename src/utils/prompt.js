@@ -6,33 +6,51 @@ var util = require('util');
 var gitUtils = require('./gitUtils');
 var params = require('./params');
 var chalk = require('chalk');
+var promiseUtils = require('./promiseUtils');
+var _ = require('lodash');
 var resolvePromise;
 
 process.stdin.on('data', (text)=> {
     resolvePromise(text);
 });
 
-function question(q){
-    process.stdout.write(chalk.yellow(q )+ ' ');
+function question(q) {
+    process.stdout.write(chalk.yellow(q) + ' ');
     return new Promise((resolve)=> {
         resolvePromise = resolve;
     });
 }
 
-
-module.exports.branch = ()=> {
-    var currBranch;
-    return gitUtils.currBranch(true)
-        .then((currBranchResponse)=> { currBranch = currBranchResponse; })
-        .then(()=>question('select branch: '))
+function branch(possibleBranchesList, currBranch) {
+    if(!possibleBranchesList || !currBranch){
+        console.log('nopossiblebranches');
+        return gitUtils.getAllBranches(true)
+        .then((branchesObj)=>branch(branchesObj.all, branchesObj.curr));
+    }
+    return question('select branch: ')
         .then((b)=> {
-            params.setBranch(b.trim());
-            return{
-                currBranch: currBranch.trim(),
-                selectedBranch: b.trim()
-            };
-        })
-};
+            b = b.trim();
+            possibleBranchesList = _.filter(possibleBranchesList, (possibleBranch)=> _.startsWith(possibleBranch, b));
+            console.log(possibleBranchesList);
+            if (possibleBranchesList.length === 1) {
+                b = possibleBranchesList[0];
+                params.setBranch(b);
+                return {
+                    currBranch: currBranch,
+                    selectedBranch: b
+                };
+            }
+            else if (possibleBranchesList.length === 0) {
+                throw {
+                    err: 'no known branch that starts with ' + b
+                };
+            }else {
+                return branch(possibleBranchesList, true);
+            }
+
+        });
+}
+module.exports.branch = branch;
 module.exports.question = question;
 
 module.exports.end = ()=> {
