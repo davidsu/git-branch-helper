@@ -96,8 +96,8 @@ function currBranch(showAll) {
                 if (branch[0] === '*') {
                     currBranchName = branch.substring(1).trim();
                     (flags.shouldLog || showAll) && log.ok(branch.trim());
-                }else{
-                (flags.shouldLog || showAll) && log(branch.trim());
+                } else {
+                    (flags.shouldLog || showAll) && log(branch.trim());
                 }
 
             });
@@ -111,30 +111,38 @@ function checkout(branchName, isRecursing) {
     branchName = branchName || params.getBranch();
     !isRecursing && log(chalk.underline('checkout ' + branchName));
     if (!branchName) {
-        log.info(chalk.underline('no branch selected'));
-        return prompt.branch(chalk.cyan.underline('choose branch to checkout:'))
+        return prompt.branch()
             .then((bname)=>checkout(bname.selectedBranch, true));
     }
     return run('git checkout ' + branchName);
 }
 
-function getAllBranches(){
+function getAllBranches(shouldLog) {
     return run('git branch')
         .then((stdin)=> {
-            return _.map(stdin.split('\n'), (branch)=> {
+            var branches, currBranchIdx;
+            branches = _.map(stdin.split('\n'), (branch, i)=> {
                 if (branch[0] === '*') {
+                    currBranchIdx = i;
                     return branch.substring(1).trim();
-                }else{
+                } else {
                     return branch.trim();
                 }
-
             });
+            shouldLog && _.forEach(branches, (branch, i)=>{
+                i === currBranchIdx? log.ok('* '+branch):log(branch);
+            });
+            return {
+                curr: branches[currBranchIdx],
+                all: branches
+            };
+
         });
 }
-function isValidBranch(branch){
+function isValidBranch(branch) {
     return getAllBranches()
-    .then((brancheArr)=>{
-            return _.contains(brancheArr, branch);
+        .then((branchesObj)=> {
+            return _.contains(branchesObj.all, branch);
         })
 }
 
