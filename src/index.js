@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-
+//bababa
 var chalk = require('chalk');
 var _ = require('lodash');
 var fsUtils = require('./utils/fsUtils');
@@ -129,6 +129,7 @@ var cmds = {
     commit: gitUtils.commit,
     log: gitUtils.log
 };
+
 
 var tmp = {
     currBranch: gitUtils.currBranch,
