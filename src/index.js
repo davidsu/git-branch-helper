@@ -70,13 +70,13 @@ function toTmp() {
 function deleteTmp() {
     return gitUtils.getAllBranches(true)
         .then((branches)=> {
-            _.chain(branches)
+            _.chain(branches.all)
                 .filter((branch)=>_.startsWith(branch, 'tmp_'))
                 .forEach((branch)=> {
                     gitUtils.run('git branch -D ' + branch)
-                });
-        })
-        .then(gitUtils.getAllBranches(true));
+                })
+                .value();
+        });
 }
 
 function pullMaster() {
@@ -150,7 +150,7 @@ var cmds = {
     simpleCommit: gitUtils.simpleCommit,
     commit: gitUtils.commit,
     log: gitUtils.log,
-    deleteTmp:deleteTmp
+    deleteTmp: deleteTmp
 };
 
 
@@ -161,8 +161,8 @@ var shortCuts = {
     totmp: toTmp,
     pullmaster: pullMaster,
     pm: pullMaster,
-    D:deleteTmp,
-    deletetmp:deleteTmp
+    D: deleteTmp,
+    deletetmp: deleteTmp
 };
 _.assign(cmds, shortCuts);
 
