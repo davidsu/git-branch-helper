@@ -63,9 +63,9 @@ function toTmp(){
     var tmpBranch = 'tmp_'+Date.now();
     return gitUtils.currBranch(false)
     .then((cbranch)=>currBranch = cbranch)
-    .then(gitUtils.checkout('master'))
-    .then(gitUtils.run('git branch '+tmpBranch))
-    .then(gitUtils.checkout(currBranch))
+    .then(()=>gitUtils.checkout('master'))
+    .then(()=>gitUtils.run('git branch '+tmpBranch))
+    .then(()=>gitUtils.checkout(currBranch))
     .then(()=>toBranch(tmpBranch));
 }
 
