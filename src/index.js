@@ -75,6 +75,7 @@ function pullMaster() {
         .then((cbranch)=>currBranch = cbranch)
         .then(()=>gitUtils.checkout('master'))
         .then(()=>gitUtils.run('git pull'))
+        .then((stdout)=>log(stdout))
         .then(()=>gitUtils.checkout(currBranch))
 }
 
@@ -170,12 +171,12 @@ function performCmdsInOrder(userArgs) {
         .catch(defaultReject);
 }
 var args = process.argv.slice(2);
-if(args.length && args[0]==='--help' || args[0]==='-h'){
+if (args.length && args[0] === '--help' || args[0] === '-h') {
     _.chain(cmds)
-    .map((val, key)=>key)
-    .sortBy((v)=>v.toLowerCase())
-    .forEach((key, i)=>log('%s:', key))
-    .value();
+        .map((val, key)=>key)
+        .sortBy((v)=>v.toLowerCase())
+        .forEach((key, i)=>log('%s:', key))
+        .value();
     prompt.end();
     return;
 }
