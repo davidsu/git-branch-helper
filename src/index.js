@@ -7,10 +7,8 @@ var gitUtils = require('./utils/gitUtils');
 var flags = require('./utils/flags');
 var params = require('./utils/params');
 var defaultReject = require('./utils/promiseUtils').defaultReject;
-var exit = defaultReject;
 
 var log = require('./utils/logUtils');
-var shouldLog, skipMerge;
 
 var exec = require('child_process').exec;
 var prompt = require('./utils/prompt.js');
@@ -67,6 +65,18 @@ function toTmp() {
         .then(()=>gitUtils.run('git branch ' + tmpBranch))
         .then(()=>gitUtils.checkout(currBranch))
         .then(()=>toBranch(tmpBranch));
+}
+
+function deleteTmp() {
+    return gitUtils.getAllBranches(true)
+        .then((branches)=> {
+            _.chain(branches)
+                .filter((branch)=>_.startsWith(branch, 'tmp_'))
+                .forEach((branch)=> {
+                    gitUtils.run('git branch -D ' + branch)
+                });
+        })
+        .then(gitUtils.getAllBranches(true));
 }
 
 function pullMaster() {
@@ -139,7 +149,8 @@ var cmds = {
     merge: gitUtils.merge,
     simpleCommit: gitUtils.simpleCommit,
     commit: gitUtils.commit,
-    log: gitUtils.log
+    log: gitUtils.log,
+    deleteTmp:deleteTmp
 };
 
 
@@ -149,7 +160,9 @@ var shortCuts = {
     tobranch: toBranch,
     totmp: toTmp,
     pullmaster: pullMaster,
-    pm: pullMaster
+    pm: pullMaster,
+    D:deleteTmp,
+    deletetmp:deleteTmp
 };
 _.assign(cmds, shortCuts);
 
