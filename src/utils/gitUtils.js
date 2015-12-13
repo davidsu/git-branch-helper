@@ -76,6 +76,14 @@ function parseStatus(status) {
     };
 }
 
+function isDirty(){
+    return run('git status --porcelain')
+    .then(parseStatus)
+    .then((status)=>{
+        return _.reduce(status, (acc, arr)=>acc+arr.length) !== 0;
+    })
+}
+
 function commit(msg, isRecursing) {
     !isRecursing && log.task('commit');
     if (!msg) {
@@ -165,3 +173,4 @@ module.exports.merge = merge;
 module.exports.run = run;
 module.exports.log = gitLog;
 module.exports.parseStatus = parseStatus;
+module.exports.isDirty = isDirty;

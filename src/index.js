@@ -71,7 +71,9 @@ function toTmp() {
 
 function pullMaster() {
     var currBranch;
-    return gitUtils.currBranch(true)
+    return gitUtils.isDirty()
+        .then((isDirty)=> isDirty && gitUtils.commit())
+        .then(()=>gitUtils.currBranch(true))
         .then((cbranch)=>currBranch = cbranch)
         .then(()=>gitUtils.checkout('master'))
         .then(()=>gitUtils.run('git pull'))
@@ -154,7 +156,7 @@ _.assign(cmds, shortCuts);
 function performCmdsInOrder(userArgs) {
     var cmdNames = _.filter(userArgs, (arg)=>!_.startsWith(arg, '-'));
     var cmd = cmdNames.shift();
-    var promise = (cmds[cmd] && cmds[cmd]()) || defaultReject({err: 'uknown cmd: ' + cmd});
+    var promise = cmds[cmd] ? cmds[cmd]() : defaultReject({err: 'uknown cmd: ' + cmd});
     while ((cmd = cmdNames.shift())) {
         let cacheCmd = cmd;
         promise = promise.then(()=> {
