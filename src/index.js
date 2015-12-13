@@ -59,6 +59,17 @@ function toBranch(branch) {
         });
 }
 
+function toTmp(){
+    var currBranch;
+    var tmpBranch = 'tmp_'+Date.now();
+    return gitUtils.currBranch(false)
+    .then((cbranch)=>currBranch = cbranch)
+    .then(gitUtils.checkout('master'))
+    .then(gitUtils.run('git branch '+tmpBranch))
+    .then(gitUtils.checkout(currBranch))
+    .then(()=>toBranch(tmpBranch));
+}
+
 function transferFilesToBranch(files, branch) {
     log.task('transfer files to branch ' + branch);
     branch = branch || params.branch;
@@ -111,6 +122,7 @@ var cmds = {
     diff: diff,
     toMaster: toMaster,
     toBranch: toBranch,
+    toTmp: toTmp,
     checkout: gitUtils.checkout,
     merge: gitUtils.merge,
     simpleCommit: gitUtils.simpleCommit,
@@ -128,7 +140,8 @@ var shortCuts = {
     checkoutbranch: cmds.checkoutBranch,
     tomaster: cmds.toMaster,
     simplecommit: cmds.simpleCommit,
-    tobranch: toBranch
+    tobranch: toBranch,
+    totmp: toTmp
 };
 _.assign(cmds, shortCuts, tmp);
 
