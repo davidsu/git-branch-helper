@@ -114,7 +114,8 @@ var cmds = {
     checkout: gitUtils.checkout,
     merge: gitUtils.merge,
     simpleCommit: gitUtils.simpleCommit,
-    commit: gitUtils.commit
+    commit: gitUtils.commit,
+    log: gitUtils.log
 };
 
 var tmp = {

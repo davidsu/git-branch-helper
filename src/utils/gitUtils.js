@@ -129,8 +129,8 @@ function getAllBranches(shouldLog) {
                     return branch.trim();
                 }
             });
-            shouldLog && _.forEach(branches, (branch, i)=>{
-                i === currBranchIdx? log.ok('* '+branch):log(branch);
+            shouldLog && _.forEach(branches, (branch, i)=> {
+                i === currBranchIdx ? log.ok('* ' + branch) : log(branch);
             });
             return {
                 curr: branches[currBranchIdx],
@@ -145,6 +145,14 @@ function isValidBranch(branch) {
             return _.contains(branchesObj.all, branch);
         })
 }
+function gitLog() {
+    return run(
+        'git log --graph ' +
+        '--pretty=format:"%Cred%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset" ' +
+        '--abbrev-commit --date=relative ' +
+        '--color')
+        .then(console.log);
+}
 
 
 module.exports.simpleCommit = ()=>commit('.');
@@ -155,4 +163,5 @@ module.exports.getAllBranches = getAllBranches;
 module.exports.checkout = checkout;
 module.exports.merge = merge;
 module.exports.run = run;
+module.exports.log = gitLog;
 module.exports.parseStatus = parseStatus;
