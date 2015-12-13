@@ -58,15 +58,24 @@ function toBranch(branch) {
         });
 }
 
-function toTmp(){
+function toTmp() {
     var currBranch;
-    var tmpBranch = 'tmp_'+Date.now();
+    var tmpBranch = params.getBranch() || 'tmp_' + Date.now();
     return gitUtils.currBranch(false)
-    .then((cbranch)=>currBranch = cbranch)
-    .then(()=>gitUtils.checkout('master'))
-    .then(()=>gitUtils.run('git branch '+tmpBranch))
-    .then(()=>gitUtils.checkout(currBranch))
-    .then(()=>toBranch(tmpBranch));
+        .then((cbranch)=>currBranch = cbranch)
+        .then(()=>gitUtils.checkout('master'))
+        .then(()=>gitUtils.run('git branch ' + tmpBranch))
+        .then(()=>gitUtils.checkout(currBranch))
+        .then(()=>toBranch(tmpBranch));
+}
+
+function pullMaster() {
+    var currBranch;
+    return gitUtils.currBranch(true)
+        .then((cbranch)=>currBranch = cbranch)
+        .then(()=>gitUtils.checkout('master'))
+        .then(()=>gitUtils.run('git pull'))
+        .then(()=>gitUtils.checkout(currBranch))
 }
 
 function transferFilesToBranch(files, branch) {
@@ -122,6 +131,7 @@ var cmds = {
     toMaster: toMaster,
     toBranch: toBranch,
     toTmp: toTmp,
+    pullMaster: pullMaster,
     checkout: gitUtils.checkout,
     merge: gitUtils.merge,
     simpleCommit: gitUtils.simpleCommit,
@@ -130,20 +140,15 @@ var cmds = {
 };
 
 
-var tmp = {
-    currBranch: gitUtils.currBranch,
-    currbranch: gitUtils.currBranch
-};
-
 var shortCuts = {
-    cob: cmds.checkoutBranch,
-    checkoutbranch: cmds.checkoutBranch,
     tomaster: cmds.toMaster,
     simplecommit: cmds.simpleCommit,
     tobranch: toBranch,
-    totmp: toTmp
+    totmp: toTmp,
+    pullmaster: pullMaster,
+    pm: pullMaster
 };
-_.assign(cmds, shortCuts, tmp);
+_.assign(cmds, shortCuts);
 
 function performCmdsInOrder(userArgs) {
     var cmdNames = _.filter(userArgs, (arg)=>!_.startsWith(arg, '-'));
@@ -151,18 +156,28 @@ function performCmdsInOrder(userArgs) {
     var promise = (cmds[cmd] && cmds[cmd]()) || defaultReject({err: 'uknown cmd: ' + cmd});
     while ((cmd = cmdNames.shift())) {
         let cacheCmd = cmd;
-        promise = promise.then(()=>{
-            if(cmds[cacheCmd]){
+        promise = promise.then(()=> {
+            if (cmds[cacheCmd]) {
                 return cmds[cacheCmd]();
             }
             throw {err: 'uknown cmd: ' + cacheCmd}
         });
     }
     promise.then(()=> {
-        log.task('end');
-        prompt.end()
-    })
+            log.task('end');
+            prompt.end()
+        })
         .catch(defaultReject);
+}
+var args = process.argv.slice(2);
+if(args.length && args[0]==='--help' || args[0]==='-h'){
+    _.chain(cmds)
+    .map((val, key)=>key)
+    .sortBy((v)=>v.toLowerCase())
+    .forEach((key, i)=>log('%s:', key))
+    .value();
+    prompt.end();
+    return;
 }
 performCmdsInOrder(process.argv.slice(2));
 
