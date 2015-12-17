@@ -5,10 +5,7 @@
 var fs = require('fs');
 var path = require('path');
 var pathSeparatorRe = /[\/\\]/g;
-var errLog = require('./logUtils').errLog;
-var log = require('./logUtils').log;
 module.exports.copy = function (srcpath, destpath) {
-
     try{
         var contents=fs.readFileSync(String(srcpath));
         mkdir(path.dirname(destpath));
