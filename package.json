@@ -1,10 +1,10 @@
 {
   "name": "git-branch-helper",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "gbh stands for git branch help. utilities to copy changes from branch into master without merging",
   "scripts": {
     "start": "node src/index.js",
-    "publish":"git push && npm publish && npm upgrade git-branch-helper -g"
+    "___publish":"git push && npm publish && npm upgrade git-branch-helper -g"
   },
   "dependencies": {
     "chalk": "^1.1.1",
