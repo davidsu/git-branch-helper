@@ -62,6 +62,7 @@ function parseStatus(status) {
                 modified.push(line.join());
                 break;
             case "A":
+                case "C":
             case "AM":
                 created.push(line.join());
                 break;
